@@ -35,9 +35,32 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Dark-only palette shared in spirit with the lgtm apps (wavelength's
-   night sky, cooled towards neutral) with an "approved" green accent. */
+/* Light and dark palettes, shared in spirit with the lgtm apps (wavelength's
+   night sky, cooled towards neutral) with an "approved" green accent. The
+   theme is the `dark` class on <html> (src/lib/theme.ts). */
 :root {
+  --background: oklch(0.985 0.003 270);
+  --foreground: oklch(0.21 0.02 270);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 270);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 270);
+  --primary: oklch(0.6 0.16 150);
+  --primary-foreground: oklch(0.99 0.01 150);
+  --secondary: oklch(0.94 0.008 270);
+  --secondary-foreground: oklch(0.21 0.02 270);
+  --muted: oklch(0.95 0.006 270);
+  --muted-foreground: oklch(0.5 0.02 270);
+  --accent: oklch(0.94 0.01 270);
+  --accent-foreground: oklch(0.21 0.02 270);
+  --destructive: oklch(0.58 0.22 25);
+  --border: oklch(0 0 0 / 10%);
+  --input: oklch(0 0 0 / 14%);
+  --ring: oklch(0.6 0.16 150);
+  --radius: 0.875rem;
+}
+
+.dark {
   --background: oklch(0.16 0.02 270);
   --foreground: oklch(0.97 0.005 270);
   --card: oklch(0.21 0.025 270);
@@ -56,7 +79,6 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 14%);
   --ring: oklch(0.8 0.18 150);
-  --radius: 0.875rem;
 }
 
 @layer base {

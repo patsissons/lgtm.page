@@ -1,5 +1,6 @@
 import { CircleCheck } from "lucide-react";
 import { AppCard, AppCardSkeleton } from "@/components/app-card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useApps } from "@/lib/use-apps";
 
 const GRID = "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3";
@@ -9,19 +10,22 @@ export default function App() {
 
   return (
     <div className="safe-x mx-auto flex min-h-dvh max-w-6xl flex-col py-12 sm:py-16">
-      <header className="mb-10 sm:mb-14">
-        <h1 className="flex items-center gap-3 text-4xl font-bold tracking-tight sm:text-5xl">
-          <CircleCheck
-            aria-hidden
-            className="size-9 text-primary sm:size-11"
-            strokeWidth={2.5}
-          />
-          lgtm.page
-        </h1>
-        <p className="mt-3 max-w-xl text-lg text-muted-foreground">
-          Small web apps that looked good to me. Each one lives on its own
-          subdomain.
-        </p>
+      <header className="mb-10 flex items-start justify-between gap-4 sm:mb-14">
+        <div>
+          <h1 className="flex items-center gap-3 text-4xl font-bold tracking-tight sm:text-5xl">
+            <CircleCheck
+              aria-hidden
+              className="size-9 text-primary sm:size-11"
+              strokeWidth={2.5}
+            />
+            LGTM
+          </h1>
+          <p className="mt-3 max-w-xl text-lg text-muted-foreground">
+            Vibe-coded web apps, each on its own lgtm.page subdomain. I didn't
+            read every line, but they looked good to me.
+          </p>
+        </div>
+        <ThemeToggle />
       </header>
 
       <main className="flex-1">

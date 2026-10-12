@@ -5,7 +5,7 @@ test("the home page lists every app as a card", async ({ page }) => {
   await stubApps(page);
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { level: 1, name: "lgtm.page" }),
+    page.getByRole("heading", { level: 1, name: "LGTM" }),
   ).toBeVisible();
 
   const cards = page.getByTestId("app-card");

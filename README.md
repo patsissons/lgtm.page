@@ -1,8 +1,9 @@
 # lgtm.page
 
-The index of small web apps hosted on `lgtm.page` subdomains, served at
-<https://lgtm.page>. Each app is a card that shows the app's own Open Graph
-image, title and description.
+LGTM: the index of vibe-coded web apps hosted on `lgtm.page` subdomains,
+served at <https://lgtm.page>. Nobody read every line, but they looked good to
+me. Each app is a card that shows the app's own Open Graph image, title and
+description.
 
 ## How it works
 
@@ -19,6 +20,8 @@ image, title and description.
 - The React app (`src/`) renders the cards in a responsive grid. Card images
   are loaded straight from each app; a missing or broken image falls back to
   a gradient in the app's theme colour.
+- Light and dark themes follow the system setting until the visitor uses
+  the toggle in the header; the choice is remembered on that device.
 - `www.lgtm.page` permanently redirects to `lgtm.page`.
 
 ## Adding an app

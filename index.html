@@ -1,25 +1,46 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#0d0f17" />
-    <title>lgtm.page</title>
+    <script>
+      // Apply the theme before first paint so there is no flash. Mirrors
+      // src/lib/theme.ts, which takes over once the app loads.
+      (function () {
+        var theme;
+        try {
+          theme = localStorage.getItem("lgtm:theme");
+        } catch (e) {}
+        if (theme !== "light" && theme !== "dark") {
+          theme = matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        var root = document.documentElement;
+        root.classList.toggle("dark", theme === "dark");
+        root.style.colorScheme = theme;
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute("content", theme === "dark" ? "#0d0f17" : "#f9f9fb");
+      })();
+    </script>
+    <title>LGTM</title>
     <meta
       name="description"
-      content="Small web apps that looked good to me. Each one lives on its own lgtm.page subdomain."
+      content="Vibe-coded web apps, each on its own lgtm.page subdomain. I didn't read every line, but they looked good to me."
     />
     <!-- Link previews (Signal, Messenger, Slack, iMessage…): absolute URLs
          are required, so these always point at the production host. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="lgtm.page" />
-    <meta property="og:title" content="lgtm.page" />
+    <meta property="og:title" content="LGTM" />
     <meta
       property="og:description"
-      content="Small web apps that looked good to me."
+      content="Vibe-coded web apps. Looks good to me."
     />
     <meta property="og:url" content="https://lgtm.page/" />
     <meta property="og:image" content="https://lgtm.page/og.png" />
@@ -28,13 +49,13 @@
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="lgtm.page with an approved check mark over a grid of app cards."
+      content="LGTM with an approved check mark beside a fan of app cards."
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="lgtm.page" />
+    <meta name="twitter:title" content="LGTM" />
     <meta
       name="twitter:description"
-      content="Small web apps that looked good to me."
+      content="Vibe-coded web apps. Looks good to me."
     />
     <meta name="twitter:image" content="https://lgtm.page/og.png" />
   </head>

@@ -36,7 +36,7 @@ describe("App", () => {
     );
     render(<App />);
     expect(
-      screen.getByRole("heading", { level: 1, name: "lgtm.page" }),
+      screen.getByRole("heading", { level: 1, name: "LGTM" }),
     ).toBeInTheDocument();
     expect(screen.getAllByTestId("app-card-skeleton")).toHaveLength(3);
   });

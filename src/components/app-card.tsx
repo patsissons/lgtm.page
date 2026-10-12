@@ -17,7 +17,7 @@ export function AppCard({ app }: { app: AppCardData }) {
       data-testid="app-card"
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground",
-        "transition duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl hover:shadow-black/30",
+        "transition duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/30",
         "focus-within:border-primary/50",
       )}
     >
@@ -37,7 +37,7 @@ export function AppCard({ app }: { app: AppCardData }) {
             className="flex size-full items-center justify-center p-6"
             style={placeholderStyle(app.themeColor)}
           >
-            <span className="text-center text-3xl font-bold tracking-tight text-foreground/90">
+            <span className="text-center text-3xl font-bold tracking-tight text-white drop-shadow">
               {app.title}
             </span>
           </div>
@@ -98,13 +98,16 @@ export function AppCardSkeleton() {
   );
 }
 
-/** A gradient from the app's theme colour, when it is a valid CSS colour. */
+/**
+ * A gradient in the app's theme colour (when it is a valid CSS colour), the
+ * same in light and dark mode; the title on it is always white.
+ */
 function placeholderStyle(themeColor?: string): CSSProperties {
   const color =
     themeColor && globalThis.CSS?.supports?.("color", themeColor)
       ? themeColor
-      : "var(--secondary)";
+      : "oklch(0.45 0.05 270)";
   return {
-    background: `radial-gradient(circle at 30% 20%, color-mix(in oklch, ${color} 70%, white 10%), var(--card))`,
+    background: `radial-gradient(circle at 30% 20%, color-mix(in oklch, ${color} 75%, white), color-mix(in oklch, ${color} 80%, black))`,
   };
 }

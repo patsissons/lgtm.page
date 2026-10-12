@@ -1,8 +1,8 @@
 /**
  * Renders the images chat apps and home screens show for lgtm.page:
  * public/og.png (1200x630, the link preview) and public/apple-touch-icon.png
- * (180x180, from public/favicon.svg). The preview is the site name with the
- * "approved" check over a fan of placeholder app cards.
+ * (180x180, from public/favicon.svg). The preview is "LGTM" with the
+ * "approved" check beside a fan of placeholder app cards.
  *
  *   pnpm og
  */
@@ -88,8 +88,8 @@ async function ogHtml(): Promise<string> {
   ${HUES.map(card).join("")}
   <header>
     <div class="mark">${CHECK}</div>
-    <h1>lgtm.page</h1>
-    <p>Small web apps that<br />looked good to me.</p>
+    <h1>LGTM</h1>
+    <p>Vibe-coded web apps.<br />Looks good to me.</p>
   </header>
 </body></html>`;
 }

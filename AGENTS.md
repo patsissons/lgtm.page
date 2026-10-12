@@ -61,8 +61,16 @@ Commit in small, modular units (one logical change per commit).
   sits above it with `relative z-10`. Never nest anchors.
 - E2e is hermetic: specs call `stubApps` (`e2e/fixtures.ts`) to serve
   `/api/apps` and every `*.lgtm.page` request from fixtures.
-- Dark-only, mobile-friendly: page padding comes from the `safe-x` utility
-  in `index.css`; `e2e/home.spec.ts` guards against horizontal scroll.
+- **Light and dark themes.** The theme is the `dark` class on `<html>`;
+  `index.css` defines light tokens on `:root` and dark ones on `.dark`, so
+  every colour must come from a token (or a `dark:` variant). The page
+  follows the system setting until the visitor uses the toggle, which is
+  remembered in `localStorage` (`lgtm:theme`). An inline script in
+  `index.html` applies the theme before first paint and mirrors
+  `src/lib/theme.ts` (key, media query, theme-color values): change both
+  together. `e2e/theme.spec.ts` checks the script works without the app.
+- Mobile-friendly: page padding comes from the `safe-x` utility in
+  `index.css`; `e2e/home.spec.ts` guards against horizontal scroll.
 - **Free to operate.** Cloudflare free tier only.
 
 ## Gotchas
@@ -78,5 +86,8 @@ Commit in small, modular units (one logical change per commit).
   (`pnpm og`, `scripts/og/render.ts`); regenerate them instead of editing the
   PNGs. `scripts/` is typechecked under `tsconfig.node.json` with
   `allowImportingTsExtensions` because Node runs the scripts directly.
+- `vitest.setup.ts` replaces Node's method-less `localStorage` with an
+  in-memory one (cleared after each test) and stubs `matchMedia` as a light
+  system theme; tests that need another answer redefine `window.matchMedia`.
 - lucide-react has no brand icons; the GitHub mark is
   `src/components/github-icon.tsx`.
