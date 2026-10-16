@@ -42,7 +42,8 @@ Commit in small, modular units (one logical change per commit).
 ## Product invariants
 
 - **The registry is the only list of apps.** `shared/apps.ts` holds one
-  entry per app in display order. Card text and images come from each app's
+  entry per app, alphabetical by slug (the display order; `apps.test.ts`
+  checks it). Apps can live on any domain. Card text and images come from each app's
   own Open Graph tags at request time; registry `title` / `description` /
   `image` are overrides for apps with poor tags, not the normal path.
   Adding an app is documented in the README; keep that section current.

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { apps } from "@shared/apps";
 import type { AppCard, AppEntry } from "@shared/types";
 import { FRESH_ERROR_MS, FRESH_MS, handleApi, loadApps, toCard } from "./api";
 
@@ -109,6 +110,9 @@ describe("handleApi", () => {
     return ((await res.json()) as AppCard[]).map((c) => c.title);
   }
 
+  /** The titles expected when every registered app serves `title`. */
+  const every = (title: string) => apps.map(() => title);
+
   beforeEach(() => {
     cache = new FakeCache();
     pending = [];
@@ -138,16 +142,15 @@ describe("handleApi", () => {
     const first = await call("/api/apps");
     expect(first.status).toBe(200);
     expect(first.headers.get("cache-control")).toBe("public, max-age=300");
-    expect(await titles(first)).toEqual(["Live"]);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://wavelength.lgtm.page/",
-      expect.anything(),
-    );
+    expect(await titles(first)).toEqual(every("Live"));
+    expect(fetchMock).toHaveBeenCalledTimes(apps.length);
+    for (const { url } of apps) {
+      expect(fetchMock).toHaveBeenCalledWith(url, expect.anything());
+    }
 
     // Query strings share one cache entry.
-    expect(await titles(await call("/api/apps?x=1"))).toEqual(["Live"]);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(await titles(await call("/api/apps?x=1"))).toEqual(every("Live"));
+    expect(fetchMock).toHaveBeenCalledTimes(apps.length);
     expect(pending).toHaveLength(0);
   });
 
@@ -157,10 +160,10 @@ describe("handleApi", () => {
     fetchMock.mockImplementation(async () => new Response(page("Newer")));
 
     vi.setSystemTime(Date.now() + FRESH_MS + 1);
-    expect(await titles(await call("/api/apps"))).toEqual(["Live"]);
+    expect(await titles(await call("/api/apps"))).toEqual(every("Live"));
     expect(pending).toHaveLength(1);
     await Promise.all(pending);
-    expect(await titles(await call("/api/apps"))).toEqual(["Newer"]);
+    expect(await titles(await call("/api/apps"))).toEqual(every("Newer"));
   });
 
   it("refreshes sooner when an app failed", async () => {
@@ -177,7 +180,9 @@ describe("handleApi", () => {
   it("skips the cache with ?refresh", async () => {
     await call("/api/apps");
     fetchMock.mockImplementation(async () => new Response(page("Forced")));
-    expect(await titles(await call("/api/apps?refresh=1"))).toEqual(["Forced"]);
-    expect(await titles(await call("/api/apps"))).toEqual(["Forced"]);
+    expect(await titles(await call("/api/apps?refresh=1"))).toEqual(
+      every("Forced"),
+    );
+    expect(await titles(await call("/api/apps"))).toEqual(every("Forced"));
   });
 });
