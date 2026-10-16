@@ -50,8 +50,10 @@ Commit in small, modular units (one logical change per commit).
   every entry (`status: "error"` when the fetch or parse failed) and the UI
   flags it; never let a fetch error reject the whole list.
 - **Metadata parsing is pure.** `worker/meta.ts` is a small tag scanner over
-  `<head>` rather than `HTMLRewriter`, so it runs in Vitest outside workerd.
-  New fields need a fallback order and a test in `meta.test.ts`.
+  the whole document rather than `HTMLRewriter`, so it runs in Vitest
+  outside workerd. It reads `<body>` too because Next.js streams its
+  metadata there; the first non-empty value wins, so `<head>` takes
+  precedence. New fields need a fallback order and a test in `meta.test.ts`.
 - **Caching.** `/api/apps` is stored in `caches.default` with an
   `x-lgtm-fresh-until` timestamp; past it, the stale list is served and a
   refresh runs in `ctx.waitUntil`. Lists with a failed app go stale after a

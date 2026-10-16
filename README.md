@@ -11,7 +11,8 @@ description.
 - The Worker's `GET /api/apps` (`worker/api.ts`) fetches each app's home page,
   reads its link-preview tags (`worker/meta.ts`: `og:*`, then `twitter:*`,
   then `<title>` / `meta[name=description]`, plus `theme-color` and the
-  favicon) and returns one card per app. An app that cannot be fetched still
+  favicon; tags in `<head>` win, but tags streamed into `<body>`, as Next.js
+  does, are read too) and returns one card per app. An app that cannot be fetched still
   gets a card, flagged as unreachable.
 - The card list is cached at the edge (Workers Cache API). It is fresh for an
   hour (a minute if any app failed); after that the stale list is served

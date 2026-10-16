@@ -69,11 +69,45 @@ describe("parseMeta", () => {
     });
   });
 
-  it("ignores tags after </head> and empty values", () => {
-    const html = `<head><meta property="og:title" content="">
+  it("reads tags streamed into <body> when the head has none", () => {
+    // Next.js streaming metadata: only theme-color makes it into <head>.
+    const html = `<head><meta name="theme-color" content="#AC130D"/></head>
+      <body><main>loading</main>
+      <title>Doc title</title>
+      <meta name="description" content="Plain description"/>
+      <meta property="og:title" content="Streamed"/>
+      <meta property="og:image" content="/opengraph-image?abc"/>
+      <meta property="og:image:alt" content="A preview"/>
+      </body>`;
+    expect(parseMeta(html, BASE)).toEqual({
+      title: "Streamed",
+      description: "Plain description",
+      image: "https://app.lgtm.page/opengraph-image?abc",
+      imageAlt: "A preview",
+      themeColor: "#AC130D",
+    });
+  });
+
+  it("prefers tags in <head> over the same tags in <body>", () => {
+    const html = `<head><title>Head</title>
+      <meta property="og:description" content="from head">
+      <link rel="icon" href="/head.svg"></head>
+      <body><svg><title>Body</title></svg>
+      <meta property="og:description" content="from body">
+      <link rel="icon" href="/body.svg"></body>`;
+    expect(parseMeta(html, BASE)).toEqual({
+      title: "Head",
+      description: "from head",
+      icon: "https://app.lgtm.page/head.svg",
+    });
+  });
+
+  it("skips empty values in favour of a later one", () => {
+    const html = `<head><meta property="og:title" content=" ">
       <title></title></head>
       <body><meta property="og:title" content="from body"></body>`;
-    expect(parseMeta(html, BASE)).toEqual({});
+    expect(parseMeta(html, BASE)).toEqual({ title: "from body" });
+    expect(parseMeta(`<title> </title><meta content="">`, BASE)).toEqual({});
   });
 
   it("returns nothing for a page without metadata", () => {
