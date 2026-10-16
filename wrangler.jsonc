@@ -13,6 +13,9 @@
     "enabled": true,
   },
   "workers_dev": true,
+  // Required (even empty) for `wrangler preview`, which deploys each PR's
+  // preview (.github/workflows/preview.yml).
+  "previews": {},
   "routes": [
     { "pattern": "lgtm.page", "custom_domain": true },
     { "pattern": "www.lgtm.page", "custom_domain": true },

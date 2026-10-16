@@ -83,6 +83,8 @@ Commit in small, modular units (one logical change per commit).
   but `/api/*`.
 - The Workers Cache API is a no-op on `workers.dev` and in PR previews, so
   those always fetch the apps live.
+- `wrangler preview` (the PR preview workflow) fails unless `wrangler.jsonc`
+  has a `previews` block; keep the empty `"previews": {}`.
 - `tsc -b` build info (`node_modules/.tmp`) can go stale after tsconfig
   edits; delete it if typecheck results look wrong.
 - `public/og.png` and `public/apple-touch-icon.png` are generated
