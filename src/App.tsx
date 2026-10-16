@@ -21,8 +21,8 @@ export default function App() {
             LGTM
           </h1>
           <p className="mt-3 max-w-xl text-lg text-muted-foreground">
-            Vibe-coded web apps, each on its own lgtm.page subdomain. I didn't
-            read every line, but they looked good to me.
+            Vibe-coded web apps. I didn't read every line, but they looked good
+            to me.
           </p>
         </div>
         <ThemeToggle />

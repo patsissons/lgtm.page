@@ -1,17 +1,20 @@
 # lgtm.page
 
-LGTM: the index of vibe-coded web apps hosted on `lgtm.page` subdomains,
-served at <https://lgtm.page>. Nobody read every line, but they looked good to
-me. Each app is a card that shows the app's own Open Graph image, title and
-description.
+LGTM: an index of vibe-coded web apps, served at <https://lgtm.page>. The
+apps live on `lgtm.page` subdomains or their own domains. Nobody read every
+line, but they looked good to me. Each app is a card that shows the app's own
+Open Graph image, title and description.
 
 ## How it works
 
-- `shared/apps.ts` is the registry: one entry per app, in display order.
+- `shared/apps.ts` is the registry: one entry per app, alphabetical by slug
+  (the display order). Apps can live on any domain; a card links straight to
+  its app.
 - The Worker's `GET /api/apps` (`worker/api.ts`) fetches each app's home page,
   reads its link-preview tags (`worker/meta.ts`: `og:*`, then `twitter:*`,
   then `<title>` / `meta[name=description]`, plus `theme-color` and the
-  favicon) and returns one card per app. An app that cannot be fetched still
+  favicon; tags in `<head>` win, but tags streamed into `<body>`, as Next.js
+  does, are read too) and returns one card per app. An app that cannot be fetched still
   gets a card, flagged as unreachable.
 - The card list is cached at the edge (Workers Cache API). It is fresh for an
   hour (a minute if any app failed); after that the stale list is served
@@ -29,10 +32,10 @@ description.
 1. Make sure the app's HTML has absolute Open Graph tags (`og:title`,
    `og:description`, `og:image` at 1200×630, ideally `og:image:alt`) and a
    `theme-color`.
-2. Add one line to `shared/apps.ts`:
+2. Add one entry to `shared/apps.ts`, keeping the list alphabetical by slug:
 
    ```ts
-   { slug: "myapp", url: "https://myapp.lgtm.page/", repo: "https://github.com/…" },
+   { slug: "myapp", url: "https://myapp.example/", repo: "https://github.com/…" },
    ```
 
    `title`, `description` and `image` can override poor tags.

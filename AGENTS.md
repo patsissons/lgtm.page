@@ -42,7 +42,8 @@ Commit in small, modular units (one logical change per commit).
 ## Product invariants
 
 - **The registry is the only list of apps.** `shared/apps.ts` holds one
-  entry per app in display order. Card text and images come from each app's
+  entry per app, alphabetical by slug (the display order; `apps.test.ts`
+  checks it). Apps can live on any domain. Card text and images come from each app's
   own Open Graph tags at request time; registry `title` / `description` /
   `image` are overrides for apps with poor tags, not the normal path.
   Adding an app is documented in the README; keep that section current.
@@ -50,8 +51,10 @@ Commit in small, modular units (one logical change per commit).
   every entry (`status: "error"` when the fetch or parse failed) and the UI
   flags it; never let a fetch error reject the whole list.
 - **Metadata parsing is pure.** `worker/meta.ts` is a small tag scanner over
-  `<head>` rather than `HTMLRewriter`, so it runs in Vitest outside workerd.
-  New fields need a fallback order and a test in `meta.test.ts`.
+  the whole document rather than `HTMLRewriter`, so it runs in Vitest
+  outside workerd. It reads `<body>` too because Next.js streams its
+  metadata there; the first non-empty value wins, so `<head>` takes
+  precedence. New fields need a fallback order and a test in `meta.test.ts`.
 - **Caching.** `/api/apps` is stored in `caches.default` with an
   `x-lgtm-fresh-until` timestamp; past it, the stale list is served and a
   refresh runs in `ctx.waitUntil`. Lists with a failed app go stale after a
@@ -80,6 +83,8 @@ Commit in small, modular units (one logical change per commit).
   but `/api/*`.
 - The Workers Cache API is a no-op on `workers.dev` and in PR previews, so
   those always fetch the apps live.
+- `wrangler preview` (the PR preview workflow) fails unless `wrangler.jsonc`
+  has a `previews` block; keep the empty `"previews": {}`.
 - `tsc -b` build info (`node_modules/.tmp`) can go stale after tsconfig
   edits; delete it if typecheck results look wrong.
 - `public/og.png` and `public/apple-touch-icon.png` are generated
