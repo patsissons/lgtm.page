@@ -48,6 +48,11 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/saucedapple",
   },
   {
+    slug: "stacky",
+    url: "https://stacky.lgtm.page/",
+    repo: "https://github.com/patsissons/stacky",
+  },
+  {
     slug: "wavelength",
     url: "https://wavelength.lgtm.page/",
     repo: "https://github.com/patsissons/wavelength",
