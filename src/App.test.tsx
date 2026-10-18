@@ -29,7 +29,7 @@ describe("App", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders the site name and skeletons while loading", () => {
+  it("renders the site name, tagline and skeletons while loading", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(() => new Promise(() => {})),
@@ -37,6 +37,9 @@ describe("App", () => {
     render(<App />);
     expect(
       screen.getByRole("heading", { level: 1, name: "LGTM" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Vibe-coded web apps. Looks good to me."),
     ).toBeInTheDocument();
     expect(screen.getAllByTestId("app-card-skeleton")).toHaveLength(3);
   });

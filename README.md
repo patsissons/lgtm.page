@@ -1,9 +1,9 @@
 # lgtm.page
 
 LGTM: an index of vibe-coded web apps, served at <https://lgtm.page>. The
-apps live on `lgtm.page` subdomains or their own domains. Nobody read every
-line, but they looked good to me. Each app is a card that shows the app's own
-Open Graph image, title and description.
+apps live on `lgtm.page` subdomains or their own domains. Looks good to me.
+Each app is a card that shows the app's own Open Graph image, title and
+description.
 
 ## How it works
 
