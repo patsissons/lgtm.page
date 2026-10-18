@@ -28,6 +28,11 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/covac",
   },
   {
+    slug: "cubby",
+    url: "https://cubby.fyi/",
+    repo: "https://github.com/patsissons/cubby",
+  },
+  {
     slug: "daythatworks",
     url: "https://daythatworks.com/",
     repo: "https://github.com/patsissons/daythatworks",
