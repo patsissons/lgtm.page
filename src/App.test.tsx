@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { appsVersion } from "@shared/apps";
 import type { AppCard } from "@shared/types";
 import App from "./App";
 
@@ -52,7 +53,10 @@ describe("App", () => {
     expect(
       screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent),
     ).toEqual(["Wavelength", "Other"]);
-    expect(fetchMock).toHaveBeenCalledWith("/api/apps", expect.anything());
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/apps?v=${appsVersion}`,
+      expect.anything(),
+    );
   });
 
   it("offers a retry when the list fails to load", async () => {
