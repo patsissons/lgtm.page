@@ -58,7 +58,11 @@ Commit in small, modular units (one logical change per commit).
 - **Caching.** `/api/apps` is stored in `caches.default` with an
   `x-lgtm-fresh-until` timestamp; past it, the stale list is served and a
   refresh runs in `ctx.waitUntil`. Lists with a failed app go stale after a
-  minute. Clients get `max-age=300`.
+  minute. Clients get `max-age=300`. The edge key and the URL `useApps`
+  requests both carry `appsVersion` (a hash of the registry,
+  `shared/apps.ts`), so a registry change misses every data center's cache
+  and every browser's on deploy; never key either on a fixed URL.
+  `caches.default` is per data center, so `?refresh` only resets one.
 - **Cards are single links.** The title link is stretched over the card
   (`after:absolute after:inset-0`); any other link on a card (the repo icon)
   sits above it with `relative z-10`. Never nest anchors.

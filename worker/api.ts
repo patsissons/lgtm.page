@@ -1,4 +1,4 @@
-import { apps } from "@shared/apps";
+import { apps, appsVersion } from "@shared/apps";
 import type { AppCard, AppEntry, AppMeta } from "@shared/types";
 import { parseMeta, resolve } from "./meta";
 
@@ -36,11 +36,13 @@ export async function handleApi(
 /**
  * The card list, from the edge cache when possible. A stale entry is served
  * as-is while a fresh one is fetched in the background; `?refresh` skips
- * the cache entirely (and repopulates it).
+ * the cache entirely (and repopulates it). The key carries the registry's
+ * fingerprint, so a deploy that changes the registry misses every cached
+ * list; the request's own query string is ignored.
  */
 async function appsResponse(ctx: ExecutionContext, url: URL) {
   const cache = caches.default;
-  const key = new Request(new URL("/api/apps", url.origin));
+  const key = new Request(new URL(`/api/apps?v=${appsVersion}`, url.origin));
 
   if (!url.searchParams.has("refresh")) {
     const hit = await cache.match(key);

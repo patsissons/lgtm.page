@@ -30,7 +30,10 @@ export const CARDS: AppCard[] = [
 
 /** Serves /api/apps and the apps themselves (pages and images) locally. */
 export async function stubApps(page: Page, cards: AppCard[] = CARDS) {
-  await page.route("**/api/apps", (route) => route.fulfill({ json: cards }));
+  await page.route(
+    (url) => url.pathname === "/api/apps",
+    (route) => route.fulfill({ json: cards }),
+  );
   await page.route("https://*.lgtm.page/**", (route) =>
     route.request().resourceType() === "document"
       ? route.fulfill({ contentType: "text/html", body: "<h1>app</h1>" })
