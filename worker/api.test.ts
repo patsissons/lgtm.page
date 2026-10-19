@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apps } from "@shared/apps";
+import { apps, appsVersion } from "@shared/apps";
 import type { AppCard, AppEntry } from "@shared/types";
 import { FRESH_ERROR_MS, FRESH_MS, handleApi, loadApps, toCard } from "./api";
 
@@ -99,7 +99,8 @@ describe("handleApi", () => {
   const ctx = {
     waitUntil: (p: Promise<unknown>) => pending.push(p),
   } as unknown as ExecutionContext;
-  const fetchMock = vi.fn(async () => new Response(page("Live")));
+  const live = async () => new Response(page("Live"));
+  const fetchMock = vi.fn(live);
 
   function call(path: string, init?: RequestInit) {
     const url = new URL(`https://lgtm.page${path}`);
@@ -116,7 +117,7 @@ describe("handleApi", () => {
   beforeEach(() => {
     cache = new FakeCache();
     pending = [];
-    fetchMock.mockClear();
+    fetchMock.mockClear().mockImplementation(live);
     vi.stubGlobal("caches", { default: cache });
     vi.stubGlobal("fetch", fetchMock);
   });
@@ -175,6 +176,20 @@ describe("handleApi", () => {
     vi.setSystemTime(Date.now() + FRESH_ERROR_MS + 1);
     await call("/api/apps");
     expect(pending).toHaveLength(1);
+  });
+
+  it("ignores a list cached for another registry", async () => {
+    for (const old of ["/api/apps", "/api/apps?v=old"]) {
+      cache.store.set(
+        `https://lgtm.page${old}`,
+        new Response(JSON.stringify([{ title: "Old" }])),
+      );
+    }
+    expect(await titles(await call("/api/apps"))).toEqual(every("Live"));
+    expect(fetchMock).toHaveBeenCalledTimes(apps.length);
+    expect(cache.store.has(`https://lgtm.page/api/apps?v=${appsVersion}`)).toBe(
+      true,
+    );
   });
 
   it("skips the cache with ?refresh", async () => {
