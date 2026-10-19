@@ -18,8 +18,11 @@ description.
   gets a card, flagged as unreachable.
 - The card list is cached at the edge (Workers Cache API). It is fresh for an
   hour (a minute if any app failed); after that the stale list is served
-  while a new one is fetched in the background. `GET /api/apps?refresh`
-  skips the cache and repopulates it.
+  while a new one is fetched in the background. Both the edge cache and the
+  browser's copy are keyed on a fingerprint of the registry
+  (`appsVersion`), so a deploy that adds, removes or edits an app is seen
+  everywhere on the next page load. `GET /api/apps?refresh` skips the cache
+  and repopulates it (in the one data center that answers it).
 - The React app (`src/`) renders the cards in a responsive grid. Card images
   are loaded straight from each app; a missing or broken image falls back to
   a gradient in the app's theme colour.
@@ -40,11 +43,11 @@ description.
 
    `title`, `description` and `image` can override poor tags.
 
-3. Deploy. To see the new card right away, open
-   <https://lgtm.page/api/apps?refresh>.
+3. Deploy. The new card shows up on the next page load.
 
 Changes to an app's own tags show up within the hour without redeploying
-the index.
+the index; open <https://lgtm.page/api/apps?refresh> to pick them up sooner
+in your nearest data center.
 
 ## Stack
 
