@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apps } from "./apps";
+import { apps, appsVersion, registryVersion } from "./apps";
 
 describe("apps", () => {
   const slugs = apps.map((app) => app.slug);
@@ -23,5 +23,15 @@ describe("apps", () => {
       if (repo)
         expect(repo).toMatch(/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/);
     }
+  });
+
+  it("fingerprints the registry", () => {
+    expect(appsVersion).toMatch(/^[0-9a-z]+$/);
+    expect(registryVersion(apps)).toBe(appsVersion);
+    expect(registryVersion(apps.slice(1))).not.toBe(appsVersion);
+    const [first, ...rest] = apps;
+    expect(registryVersion([{ ...first!, title: "New" }, ...rest])).not.toBe(
+      appsVersion,
+    );
   });
 });

@@ -58,3 +58,20 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/wavelength",
   },
 ];
+
+/** A short, stable fingerprint (32-bit FNV-1a, base 36) of `entries`. */
+export function registryVersion(entries: readonly AppEntry[]): string {
+  let hash = 0x811c9dc5;
+  for (const char of JSON.stringify(entries)) {
+    hash ^= char.codePointAt(0)!;
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+/**
+ * Changes whenever the registry does, so caches keyed on it (the edge cache
+ * and the browser's copy of /api/apps) miss as soon as a deploy adds,
+ * removes or edits an app.
+ */
+export const appsVersion = registryVersion(apps);
