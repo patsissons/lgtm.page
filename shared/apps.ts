@@ -58,6 +58,11 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/take5",
   },
   {
+    slug: "voting",
+    url: "https://voting.lgtm.page/",
+    repo: "https://github.com/patsissons/voting",
+  },
+  {
     slug: "wavelength",
     url: "https://wavelength.lgtm.page/",
     repo: "https://github.com/patsissons/wavelength",
