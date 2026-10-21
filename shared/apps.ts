@@ -29,7 +29,7 @@ export const apps: readonly AppEntry[] = [
   },
   {
     slug: "cubby",
-    url: "https://cubby.fyi/",
+    url: "https://cubby.pockethost.io/",
     repo: "https://github.com/patsissons/cubby",
   },
   {
