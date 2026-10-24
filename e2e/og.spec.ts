@@ -26,3 +26,27 @@ test("the page carries Open Graph tags and serves the preview image", async ({
     expect((await request.get(icon)).ok()).toBe(true);
   }
 });
+
+/** The icon is a rounded square; the corners must not show a background. */
+test("the touch icon has transparent rounded corners", async ({ page }) => {
+  await page.goto("/");
+  const pixels = await page.evaluate(async () => {
+    const img = new Image();
+    img.src = "/apple-touch-icon.png";
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+    const alpha = (x: number, y: number) =>
+      ctx.getImageData(x, y, 1, 1).data[3];
+    return {
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+      corner: alpha(0, 0),
+      center: alpha(img.naturalWidth / 2, img.naturalHeight / 2),
+    };
+  });
+  expect(pixels).toEqual({ width: 180, height: 180, corner: 0, center: 255 });
+});

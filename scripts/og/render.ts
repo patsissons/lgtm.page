@@ -1,8 +1,9 @@
 /**
  * Renders the images chat apps and home screens show for lgtm.page:
  * public/og.png (1200x630, the link preview) and public/apple-touch-icon.png
- * (180x180, from public/favicon.svg). The preview is "LGTM" with the
- * "approved" check beside a fan of placeholder app cards.
+ * (180x180, from public/favicon.svg, with transparent rounded corners). The
+ * preview is "LGTM" with the "approved" check beside a fan of placeholder app
+ * cards.
  *
  *   pnpm og
  */
@@ -97,7 +98,8 @@ async function ogHtml(): Promise<string> {
 async function iconHtml(size: number): Promise<string> {
   const svg = await readFile(path.join(ROOT, "public/favicon.svg"), "utf8");
   return `<!doctype html><html><head><style>
-    * { margin: 0; } html, body { width: ${size}px; height: ${size}px; overflow: hidden; }
+    * { margin: 0; }
+    html, body { width: ${size}px; height: ${size}px; overflow: hidden; background: transparent; }
     svg { display: block; width: ${size}px; height: ${size}px; }
   </style></head><body>${svg}</body></html>`;
 }
@@ -107,6 +109,7 @@ async function render(
   html: string,
   width: number,
   height: number,
+  { transparent = false } = {},
 ): Promise<void> {
   const page = await browser.newPage({
     viewport: { width, height },
@@ -114,7 +117,10 @@ async function render(
   });
   await page.setContent(html);
   await page.evaluate(() => document.fonts.ready);
-  const png = await page.screenshot({ type: "png" });
+  const png = await page.screenshot({
+    type: "png",
+    omitBackground: transparent,
+  });
   const out = path.join(ROOT, file);
   await writeFile(out, png);
   console.log(`wrote ${file} (${png.byteLength} bytes)`);
@@ -124,7 +130,9 @@ async function render(
 const browser = await chromium.launch();
 try {
   await render("public/og.png", await ogHtml(), WIDTH, HEIGHT);
-  await render("public/apple-touch-icon.png", await iconHtml(180), 180, 180);
+  await render("public/apple-touch-icon.png", await iconHtml(180), 180, 180, {
+    transparent: true,
+  });
 } finally {
   await browser.close();
 }
