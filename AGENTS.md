@@ -95,6 +95,8 @@ Commit in small, modular units (one logical change per commit).
   (`pnpm og`, `scripts/og/render.ts`); regenerate them instead of editing the
   PNGs. `scripts/` is typechecked under `tsconfig.node.json` with
   `allowImportingTsExtensions` because Node runs the scripts directly.
+  The icon is screenshotted with `omitBackground` so the rounded corners of
+  `public/favicon.svg` stay transparent.
 - `vitest.setup.ts` replaces Node's method-less `localStorage` with an
   in-memory one (cleared after each test) and stubs `matchMedia` as a light
   system theme; tests that need another answer redefine `window.matchMedia`.
