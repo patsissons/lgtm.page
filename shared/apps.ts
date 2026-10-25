@@ -43,6 +43,11 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/jeoprompty",
   },
   {
+    slug: "prismy",
+    url: "https://prismy.lgtm.page/",
+    repo: "https://github.com/patsissons/prismy",
+  },
+  {
     slug: "saucedapple",
     url: "https://saucedapple.com/",
     repo: "https://github.com/patsissons/saucedapple",
