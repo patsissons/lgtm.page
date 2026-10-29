@@ -13,6 +13,11 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/aidios",
   },
   {
+    slug: "bazillion",
+    url: "https://bazillion.lgtm.page/",
+    repo: "https://github.com/patsissons/bazillion",
+  },
+  {
     slug: "bocodds",
     url: "https://bocodds.com/",
     repo: "https://github.com/patsissons/bocodds",
