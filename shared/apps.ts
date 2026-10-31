@@ -68,6 +68,11 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/take5",
   },
   {
+    slug: "tiki.place",
+    url: "https://tiki.place/",
+    repo: "https://github.com/patsissons/tiki.place",
+  },
+  {
     slug: "voting",
     url: "https://voting.lgtm.page/",
     repo: "https://github.com/patsissons/voting",
