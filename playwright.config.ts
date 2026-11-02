@@ -1,8 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // E2e runs against `vite dev` (the Worker runs in workerd via the cloudflare
-// plugin). Port 5198 (not 5173) so a normally-running dev server is never
-// reused. Specs stub /api/apps so runs never depend on the live apps.
+// plugin) in the `e2e` wrangler environment, whose provider origin is the
+// stub below, so sign-in never touches GitHub or Google. Port 5198 (not
+// 5173) so a normally-running dev server is never reused. Specs stub
+// /api/apps so runs never depend on the live apps.
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -26,9 +28,17 @@ export default defineConfig({
       use: { ...devices["iPhone 14"] },
     },
   ],
-  webServer: {
-    command: "pnpm dev --port 5198 --strictPort",
-    url: "http://localhost:5198/api/health",
-    reuseExistingServer: false,
-  },
+  webServer: [
+    {
+      command: "node e2e/stub-provider.ts 5199",
+      url: "http://localhost:5199/health",
+      reuseExistingServer: false,
+    },
+    {
+      command: "pnpm dev --port 5198 --strictPort",
+      url: "http://localhost:5198/api/health",
+      reuseExistingServer: false,
+      env: { CLOUDFLARE_ENV: "e2e" },
+    },
+  ],
 });
