@@ -13,11 +13,18 @@ export interface Client {
   origin: string;
 }
 
+/**
+ * The index itself (worker/account.ts) signs in through the broker too. It
+ * is not a registry app, so it is the one built-in client.
+ */
+export const INDEX_CLIENT: Client = { id: "lgtm", origin: "https://lgtm.page" };
+
 export function findClient(
   id: string | null | undefined,
   registry: readonly AppEntry[] = apps,
 ): Client | null {
   if (!id) return null;
+  if (id === INDEX_CLIENT.id) return INDEX_CLIENT;
   const entry = registry.find((app) => app.slug === id);
   return entry ? { id: entry.slug, origin: new URL(entry.url).origin } : null;
 }
@@ -58,7 +65,7 @@ export function isAllowedOrigin(
     return false;
   }
   if (url.origin !== origin) return false;
-  if (isLoopback(url)) return true;
+  if (isLoopback(url) || origin === INDEX_CLIENT.origin) return true;
   return registry.some((app) => new URL(app.url).origin === origin);
 }
 

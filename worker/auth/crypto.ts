@@ -6,7 +6,14 @@ import { fromBase64Url, toBase64Url } from "@shared/auth";
  * the master secret for that one purpose, so a code can never be opened as
  * a session cookie.
  */
-export type SealPurpose = "txn" | "session" | "code";
+export type SealPurpose =
+  | "txn"
+  | "session"
+  | "code"
+  // The index's own cookies (worker/account.ts): the pending sign-in and
+  // the signed-in account.
+  | "login"
+  | "account";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();

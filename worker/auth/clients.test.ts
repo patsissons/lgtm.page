@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { deriveClientSecret } from "@shared/auth";
 import {
   findClient,
+  INDEX_CLIENT,
   isAllowedOrigin,
   isAllowedRedirect,
   verifyClientSecret,
@@ -31,6 +32,23 @@ describe("findClient", () => {
     expect(findClient("wavelength")?.origin).toBe(
       "https://wavelength.lgtm.page",
     );
+  });
+});
+
+describe("the built-in index client", () => {
+  it("is lgtm on https://lgtm.page, outside the registry", () => {
+    expect(findClient("lgtm", [])).toEqual(INDEX_CLIENT);
+    expect(INDEX_CLIENT).toEqual({ id: "lgtm", origin: "https://lgtm.page" });
+    expect(
+      isAllowedRedirect(INDEX_CLIENT, "https://lgtm.page/api/auth/callback"),
+    ).toBe(true);
+    expect(
+      isAllowedRedirect(
+        INDEX_CLIENT,
+        "https://www.lgtm.page/api/auth/callback",
+      ),
+    ).toBe(false);
+    expect(isAllowedOrigin("https://lgtm.page", [])).toBe(true);
   });
 });
 
