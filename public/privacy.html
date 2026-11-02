@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy · lgtm.page</title>
+    <meta
+      name="description"
+      content="What lgtm.page and its sign-in service (auth.lgtm.page) collect, store and share."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fafafa;
+        --fg: #18181b;
+        --muted: #71717a;
+        --border: #e4e4e7;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --fg: #fafafa;
+          --muted: #a1a1aa;
+          --border: #27272a;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 32px 16px 64px;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          16px/1.6 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        max-width: 640px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 1.75rem;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 1.125rem;
+        margin: 32px 0 8px;
+      }
+      p,
+      li {
+        margin: 0 0 12px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      a {
+        color: inherit;
+      }
+      hr {
+        border: 0;
+        border-top: 1px solid var(--border);
+        margin: 32px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Privacy</h1>
+      <p class="muted">
+        lgtm.page and auth.lgtm.page · last updated 2 November 2026
+      </p>
+
+      <h2>The index (lgtm.page)</h2>
+      <p>
+        The index is a static list of apps. It sets no cookies and runs no
+        analytics. Your light/dark theme choice is kept in your browser's local
+        storage and never sent anywhere.
+      </p>
+
+      <h2>Sign-in (auth.lgtm.page)</h2>
+      <p>
+        Some apps listed here let you sign in with GitHub or Google through
+        auth.lgtm.page. When you do, auth.lgtm.page receives from the provider
+        you chose: a stable account id, your display name, your avatar URL and,
+        if the provider shares it, your primary email address and whether it is
+        verified. Nothing else is requested; in particular no access to your
+        repositories, contacts, files or mail.
+      </p>
+      <p>
+        That profile is handed only to the app you were signing in to, as a
+        signed token, so the app can recognise you on later visits. Which apps
+        may use sign-in is limited to the ones listed on lgtm.page.
+      </p>
+
+      <h2>What is stored</h2>
+      <ul>
+        <li>
+          A cookie on auth.lgtm.page remembering your sign-in for up to 30 days,
+          so a second app does not ask you to choose a provider again. It is
+          encrypted and holds only the profile above.
+        </li>
+        <li>
+          For about two minutes after each sign-in, a record that the one-time
+          sign-in code was used, so it cannot be replayed.
+        </li>
+      </ul>
+      <p>
+        auth.lgtm.page keeps no database of users, no login history and no
+        provider access tokens. Each app decides what it stores about you under
+        its own policy.
+      </p>
+
+      <h2>Third parties</h2>
+      <p>
+        Everything runs on Cloudflare. GitHub and Google act as identity
+        providers under their own terms. Nothing is sold or shared with anyone
+        else.
+      </p>
+
+      <h2>Your choices</h2>
+      <p>
+        You can sign out of auth.lgtm.page at any time at
+        <a href="https://auth.lgtm.page/logout">auth.lgtm.page/logout</a>, which
+        deletes the sign-in cookie, and revoke the <code>lgtm.page</code> app in
+        your GitHub or Google account settings.
+      </p>
+
+      <hr />
+      <p class="muted">
+        Questions: open an issue at
+        <a href="https://github.com/patsissons/lgtm"
+          >github.com/patsissons/lgtm</a
+        >.
+      </p>
+    </main>
+  </body>
+</html>

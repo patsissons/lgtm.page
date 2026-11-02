@@ -12,6 +12,7 @@
     "e2e",
     "scripts",
     "shared/types.ts",
+    "shared/auth.ts",
     "eslint.config.js"
   ]
 }

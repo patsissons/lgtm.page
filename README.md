@@ -29,6 +29,12 @@ description.
 - Light and dark themes follow the system setting until the visitor uses
   the toggle in the header; the choice is remembered on that device.
 - `www.lgtm.page` permanently redirects to `lgtm.page`.
+- `/privacy` (`public/privacy.html`) is the privacy policy that the Google
+  OAuth consent screen links to; keep it accurate when the broker changes.
+- The same Worker is the identity broker at <https://auth.lgtm.page>
+  (`worker/auth/`): one GitHub OAuth App and one Google client, registered
+  once, serve sign-in for every app in the registry. See
+  [Using lgtm.page sign-in from an app](#using-lgtmpage-sign-in-from-an-app).
 
 ## Adding an app
 
@@ -49,6 +55,77 @@ Changes to an app's own tags show up within the hour without redeploying
 the index; open <https://lgtm.page/api/apps?refresh> to pick them up sooner
 in your nearest data center.
 
+## Using lgtm.page sign-in from an app
+
+`auth.lgtm.page` is a small OpenID Connect provider that signs people in
+with GitHub or Google and hands your app a signed identity. Registering an
+app in `shared/apps.ts` is all the setup there is: the registry is the
+client list.
+
+- Discovery: <https://auth.lgtm.page/.well-known/openid-configuration>
+  (authorize, token, userinfo, JWKS and end-session endpoints).
+- `client_id` is your registry slug. `redirect_uri` may be any URL on your
+  app's origin (the origin of its registry `url`), or any `http://localhost`
+  / `http://127.0.0.1` URL for local dev.
+- Flow: authorization code with PKCE (`code_challenge_method=S256`). Pass
+  `provider=github` or `provider=google` to skip the chooser, `prompt=none`
+  to test for an existing session, `prompt=login` to force a fresh sign-in.
+- Tokens are ES256 JWTs. Verify the `id_token` against the JWKS and key
+  your users on `sub` (`github:<id>` or `google:<sub>`; the two are
+  different users). Claims: `email`, `email_verified`, `name`, `picture`,
+  `preferred_username` (GitHub login), `provider`, `provider_id`, plus
+  `nonce` and `auth_time`. The access token (`typ: at+jwt`) works at
+  `/userinfo` and carries the same claims. Tokens last an hour; there are
+  no refresh tokens, so re-run `/authorize` (silent while the broker
+  session lasts, 30 days).
+- On sign-out, send the browser to the `end_session_endpoint`
+  (`/logout?client_id=<slug>&post_logout_redirect_uri=<your origin>`), or
+  the next `/authorize` will sign the same account straight back in.
+
+**Single-page or native app** (public client, PKCE, no secret):
+
+```ts
+const { authorization_endpoint, token_endpoint } = await (
+  await fetch("https://auth.lgtm.page/.well-known/openid-configuration")
+).json();
+// 1. send the browser to authorization_endpoint with client_id=<slug>,
+//    redirect_uri, response_type=code, scope=openid email profile, state,
+//    nonce, code_challenge (S256) — then, back on redirect_uri:
+const tokens = await fetch(token_endpoint, {
+  method: "POST",
+  headers: { "content-type": "application/x-www-form-urlencoded" },
+  body: new URLSearchParams({
+    grant_type: "authorization_code",
+    code,
+    redirect_uri,
+    client_id: "<slug>",
+    code_verifier,
+  }),
+}).then((r) => r.json()); // { id_token, access_token, expires_in, ... }
+```
+
+An iOS app uses `ASWebAuthenticationSession` with an `https://` callback on
+the app's own origin (a universal link); custom URL schemes are not
+accepted.
+
+**Server-side app that cannot do PKCE** (PocketBase, confidential client):
+its secret is derived from the broker's master secret and its slug, so there
+is nothing to store. Generate it with the production master secret:
+
+```sh
+AUTH_MASTER_SECRET=… pnpm auth:client-secret <slug>
+```
+
+In PocketBase, add an OIDC provider with client id `<slug>`, that secret,
+and the auth, token and user-info URLs from discovery (PKCE can stay on; a
+presented secret is always checked).
+
+Local dev of an app can use the production broker directly (loopback
+redirects are always allowed). The broker itself also runs locally under
+`pnpm dev` at `http://localhost:5173/auth/` once `.dev.vars` is filled in
+(see [Setup](#setup)); PR previews serve it under `/auth/` too, but sign-in
+cannot complete there because their callbacks are not registered.
+
 ## Stack
 
 - React 19, Vite, Tailwind v4, shadcn/ui
@@ -68,26 +145,59 @@ pnpm dev
 `pnpm dev` runs Vite with the Cloudflare plugin, so the Worker runs locally
 in workerd and `/api/apps` fetches the live apps.
 
+The identity broker needs secrets. For local sign-in through the real
+providers, copy `.dev.vars.example` to `.dev.vars` and fill it in (the
+provider apps must list `http://localhost:5173/auth/callback/github` and
+`/google` as callbacks). Without it the index works and every `/auth/*`
+route answers `503 auth_not_configured`. The e2e suite never needs it: it
+runs the Worker in the `e2e` wrangler environment with the committed
+`.dev.vars.e2e` and `e2e/stub-provider.ts` standing in for GitHub and
+Google.
+
+### One-time provider setup
+
+1. GitHub → Settings → Developer settings → OAuth Apps → New: callback
+   `https://auth.lgtm.page/callback/github` (plus the localhost one above),
+   wildcard matching off. Scopes requested at sign-in: `read:user
+user:email`.
+2. Google Cloud → Google Auth Platform: external audience, authorized
+   domain `lgtm.page`, published; a Web application client with redirect
+   `https://auth.lgtm.page/callback/google` (plus the localhost one).
+   Scopes: `openid email profile`.
+3. `pnpm auth:keygen` → `AUTH_SIGNING_KEYS`; `openssl rand -base64 32` →
+   `AUTH_MASTER_SECRET`.
+4. `wrangler secret put` each of `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`,
+   `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SIGNING_KEYS`,
+   `AUTH_MASTER_SECRET`. The `AUTH_KV` namespace id is in `wrangler.jsonc`
+   (`wrangler kv namespace create AUTH_KV` made it).
+
+Rotate the signing key with `pnpm auth:keygen --rotate '<current array>'`
+(new key first, old one kept until its tokens have expired). Rotating
+`AUTH_MASTER_SECRET` rotates every derived client secret and ends every
+broker session.
+
 ## Scripts
 
-| Script                     | What it does                                                     |
-| -------------------------- | ---------------------------------------------------------------- |
-| `pnpm dev`                 | Vite dev server with the Worker running locally                  |
-| `pnpm build`               | Production build of the client and the Worker                    |
-| `pnpm preview`             | Serve the production build locally                               |
-| `pnpm deploy`              | Build and `wrangler deploy`                                      |
-| `pnpm og`                  | Regenerate `public/og.png` and `public/apple-touch-icon.png`     |
-| `pnpm types`               | Regenerate `worker-configuration.d.ts` from `wrangler.jsonc`     |
-| `pnpm typecheck`           | `wrangler types`, then `tsc -b` over the app, worker and tooling |
-| `pnpm test`                | Unit tests (Vitest)                                              |
-| `pnpm test:watch`          | Unit tests in watch mode                                         |
-| `pnpm test:e2e`            | Playwright e2e tests (starts its own dev server on port 5198)    |
-| `pnpm lint`                | ESLint                                                           |
-| `pnpm format`              | Prettier (write)                                                 |
-| `pnpm format:check`        | Prettier (check)                                                 |
-| `pnpm validate:quick`      | Format check, typecheck, lint and unit tests                     |
-| `pnpm validate`            | `validate:quick`, then the e2e suite (used by CI)                |
-| `pnpm format-and-validate` | `format`, then `validate` (run before every commit)              |
+| Script                     | What it does                                                      |
+| -------------------------- | ----------------------------------------------------------------- |
+| `pnpm dev`                 | Vite dev server with the Worker running locally                   |
+| `pnpm build`               | Production build of the client and the Worker                     |
+| `pnpm preview`             | Serve the production build locally                                |
+| `pnpm deploy`              | Build and `wrangler deploy`                                       |
+| `pnpm og`                  | Regenerate `public/og.png` and `public/apple-touch-icon.png`      |
+| `pnpm auth:keygen`         | Print a signing key set for `AUTH_SIGNING_KEYS` (`--rotate` adds) |
+| `pnpm auth:client-secret`  | Print a confidential client's derived secret (`<slug>`)           |
+| `pnpm types`               | Regenerate `worker-configuration.d.ts` from `wrangler.jsonc`      |
+| `pnpm typecheck`           | `wrangler types`, then `tsc -b` over the app, worker and tooling  |
+| `pnpm test`                | Unit tests (Vitest)                                               |
+| `pnpm test:watch`          | Unit tests in watch mode                                          |
+| `pnpm test:e2e`            | Playwright e2e tests (starts its own dev server on port 5198)     |
+| `pnpm lint`                | ESLint                                                            |
+| `pnpm format`              | Prettier (write)                                                  |
+| `pnpm format:check`        | Prettier (check)                                                  |
+| `pnpm validate:quick`      | Format check, typecheck, lint and unit tests                      |
+| `pnpm validate`            | `validate:quick`, then the e2e suite (used by CI)                 |
+| `pnpm format-and-validate` | `format`, then `validate` (run before every commit)               |
 
 ## Deploy
 
@@ -98,7 +208,8 @@ pnpm deploy
 Requires `wrangler login` (or `CLOUDFLARE_API_TOKEN`, e.g. in a gitignored
 `.env`). Production is served at <https://lgtm.page> and
 <https://www.lgtm.page> (custom domains in `wrangler.jsonc` `routes`, the
-latter redirecting to the former), with a `workers.dev` fallback.
+latter redirecting to the former) plus the broker at
+<https://auth.lgtm.page>, with a `workers.dev` fallback.
 
 CI (`.github/workflows/ci.yml`) validates every PR and deploys `main`; it
 needs the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository

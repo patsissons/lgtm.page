@@ -1,0 +1,9 @@
+# TEST-ONLY values for the Playwright suite (CLOUDFLARE_ENV=e2e). Nothing here
+# is secret: the "providers" are e2e/stub-provider.ts on localhost:5199 and
+# the signing key only ever signs tokens for that run. Never reuse these.
+GITHUB_CLIENT_ID=e2e-github-client
+GITHUB_CLIENT_SECRET=e2e-github-secret
+GOOGLE_CLIENT_ID=e2e-google-client
+GOOGLE_CLIENT_SECRET=e2e-google-secret
+AUTH_MASTER_SECRET=e2e-master-secret-not-for-production
+AUTH_SIGNING_KEYS='[{"kty":"EC","crv":"P-256","x":"ub_KyGWrlIipHuTEi_3B20Ju0vA532JGTESzJhGYMNo","y":"nr7yr4PpGsj_jZanXRg8Uit09sgp3SWJIPPn3zlnDMo","d":"G7FlJQbVYB3QyY-ORVqtH2ESDTvFlZfnn6mVqRTACAw","kid":"b-iVY5ngbiHZ9vO7DFSbTIHnX17EipkKvnlU6GtNM6w"}]'
