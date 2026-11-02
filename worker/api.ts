@@ -1,5 +1,7 @@
 import { apps, appsVersion } from "@shared/apps";
 import type { AppCard, AppEntry, AppMeta } from "@shared/types";
+import { handleAccount } from "./account";
+import type { AuthEnv } from "./auth/env";
 import { parseMeta, resolve } from "./meta";
 
 export function json(body: unknown, init: ResponseInit = {}): Response {
@@ -22,11 +24,13 @@ const FRESH_UNTIL = "x-lgtm-fresh-until";
 
 export async function handleApi(
   request: Request,
+  env: AuthEnv,
   ctx: ExecutionContext,
   url: URL,
 ): Promise<Response> {
   const path = url.pathname;
   if (path === "/api/health") return json({ ok: true });
+  if (path.startsWith("/api/auth/")) return handleAccount(request, env, url);
   if (path === "/api/apps" && request.method === "GET") {
     return appsResponse(ctx, url);
   }
