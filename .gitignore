@@ -16,6 +16,10 @@ coverage/
 !.env.example
 .dev.vars
 .dev.vars.*
+# Throwaway values for the e2e provider stub; nothing in it is a real secret.
+!.dev.vars.e2e
+# The documented template; it holds no values.
+!.dev.vars.example
 
 # editor / os
 .DS_Store

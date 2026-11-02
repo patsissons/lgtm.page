@@ -1,0 +1,12 @@
+# Copy to .dev.vars (gitignored) for local sign-in through the real providers.
+# The broker then answers at http://localhost:5173/auth/ and its callbacks
+# (http://localhost:5173/auth/callback/github and /google) must be registered
+# on the provider apps alongside the production ones.
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# JSON array of private P-256 JWKs with a kid: `pnpm auth:keygen`.
+AUTH_SIGNING_KEYS=
+# 32+ random bytes: `openssl rand -base64 32`.
+AUTH_MASTER_SECRET=

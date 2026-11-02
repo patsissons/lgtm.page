@@ -19,5 +19,30 @@
   "routes": [
     { "pattern": "lgtm.page", "custom_domain": true },
     { "pattern": "www.lgtm.page", "custom_domain": true },
+    // The identity broker (worker/auth), served at the root of this host.
+    { "pattern": "auth.lgtm.page", "custom_domain": true },
   ],
+  "vars": {
+    "AUTH_HOST": "auth.lgtm.page",
+    // Set only in the e2e environment, where a local stub plays the providers.
+    "AUTH_PROVIDER_ORIGIN": "",
+  },
+  "kv_namespaces": [
+    // Burns redeemed authorization codes; the broker's only storage.
+    { "binding": "AUTH_KV", "id": "f831105474344fe18be241a26a39867e" },
+  ],
+  // `CLOUDFLARE_ENV=e2e pnpm dev` (what Playwright starts) reads
+  // `.dev.vars.e2e` and talks to the provider stub on 5199. Vars and
+  // bindings are not inherited by environments, hence the repetition.
+  "env": {
+    "e2e": {
+      "vars": {
+        "AUTH_HOST": "auth.lgtm.page",
+        "AUTH_PROVIDER_ORIGIN": "http://localhost:5199",
+      },
+      "kv_namespaces": [{ "binding": "AUTH_KV", "id": "e2e-local" }],
+      // Never deployed; an empty list stops it inheriting the custom domains.
+      "routes": [],
+    },
+  },
 }
