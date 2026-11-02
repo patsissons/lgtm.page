@@ -104,7 +104,7 @@ describe("handleApi", () => {
 
   function call(path: string, init?: RequestInit) {
     const url = new URL(`https://lgtm.page${path}`);
-    return handleApi(new Request(url, init), ctx, url);
+    return handleApi(new Request(url, init), {} as never, ctx, url);
   }
 
   async function titles(res: Response) {

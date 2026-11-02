@@ -126,6 +126,18 @@ Env`) because CI has no `.dev.vars` for `wrangler types` to read. Do not
   (`AUTH_PROVIDER_ORIGIN`, local KV, no routes) and `.dev.vars.e2e` (the
   one committed dev-vars file; test-only values).
 
+- **The index's own sign-in** (`worker/account.ts`, `/api/auth/*`) is a
+  client of the broker like any app: `lgtm` is the one client that is not a
+  registry entry (`INDEX_CLIENT` in `worker/auth/clients.ts`). Its session
+  is the sealed HttpOnly `lgtm_session` cookie on lgtm.page, separate from
+  the broker's `lgtm_auth_session` on auth.lgtm.page. The callback redeems
+  the code by calling `handleAuth` in-process (same Worker, no HTTP hop) and
+  verifies the `id_token` (`aud`, `nonce`) before setting the cookie. Signing
+  out must also hit the broker's `end_session_endpoint`, or the next
+  sign-in anywhere is silent. The page learns who is signed in only from
+  `/api/auth/me` (`src/lib/use-user.ts`); tests that render `App` must
+  answer that URL.
+
 ## Gotchas
 
 - `assets.run_worker_first` is `true` so the `www` redirect runs before

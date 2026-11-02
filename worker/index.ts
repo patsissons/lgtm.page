@@ -18,7 +18,7 @@ export default {
     const mount = authMount(url, env);
     if (mount) return handleAuth(request, env as AuthEnv, url, mount);
     if (url.pathname.startsWith("/api/")) {
-      return handleApi(request, ctx, url);
+      return handleApi(request, env as AuthEnv, ctx, url);
     }
     return env.ASSETS.fetch(request);
   },

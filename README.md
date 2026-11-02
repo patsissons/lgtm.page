@@ -36,6 +36,21 @@ description.
   once, serve sign-in for every app in the registry. See
   [Using lgtm.page sign-in from an app](#using-lgtmpage-sign-in-from-an-app).
 
+## Sign-in on the index
+
+lgtm.page is itself a client of the broker, the one built-in client (`lgtm`,
+origin `https://lgtm.page`, not a registry entry). The avatar in the header
+opens a sign-in dialog (GitHub or Google) or, once signed in, the account
+and a sign-out. The Worker handles it under `/api/auth/*`
+(`worker/account.ts`): `login` starts a code + PKCE flow against the broker,
+`callback` redeems the code by calling the broker's `/token` handler
+in-process and keeps the account in the sealed, HttpOnly `lgtm_session`
+cookie (30 days), `me` reports it to the page, and `logout` (POST) clears it
+and ends the broker session too, so the next sign-in anywhere is not silent.
+The broker's own session cookie lives on `auth.lgtm.page` and is separate.
+Locally the same flow runs against the path-mounted broker on
+`localhost:5173/auth`.
+
 ## Adding an app
 
 1. Make sure the app's HTML has absolute Open Graph tags (`og:title`,

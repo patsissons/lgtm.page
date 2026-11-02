@@ -1,4 +1,5 @@
 import { CircleCheck } from "lucide-react";
+import { AccountMenu } from "@/components/account-menu";
 import { AppCard, AppCardSkeleton } from "@/components/app-card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useApps } from "@/lib/use-apps";
@@ -24,7 +25,10 @@ export default function App() {
             Vibe-coded web apps. Looks good to me.
           </p>
         </div>
-        <ThemeToggle />
+        <div className="flex shrink-0 items-center gap-3">
+          <ThemeToggle />
+          <AccountMenu />
+        </div>
       </header>
 
       <main className="flex-1">

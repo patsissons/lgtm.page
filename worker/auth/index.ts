@@ -15,7 +15,8 @@ import { handleUserinfo } from "./userinfo";
 
 const PREFIX = "/auth";
 
-function isDevHost(hostname: string): boolean {
+/** localhost, loopback and workers.dev: where the broker is path-mounted. */
+export function isDevHost(hostname: string): boolean {
   return (
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
