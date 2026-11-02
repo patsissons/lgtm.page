@@ -16,6 +16,8 @@
     "preview": "vite preview",
     "deploy": "pnpm build && wrangler deploy",
     "og": "node scripts/og/render.ts",
+    "auth:keygen": "node scripts/auth/keygen.ts",
+    "auth:client-secret": "node scripts/auth/client-secret.ts",
     "types": "wrangler types",
     "typecheck": "wrangler types && tsc -b",
     "test": "vitest run",
