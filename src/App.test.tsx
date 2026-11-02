@@ -14,8 +14,10 @@ const card = (slug: string): AppCard => ({
   status: "ok",
 });
 
+/** Answers /api/apps from `responses` in order; the visitor is signed out. */
 function mockApps(...responses: Array<AppCard[] | number>) {
-  const fetchMock = vi.fn(async () => {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    if (String(input) === "/api/auth/me") return Response.json({ user: null });
     const next = responses.shift() ?? [];
     return typeof next === "number"
       ? new Response("", { status: next })
