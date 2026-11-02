@@ -80,6 +80,52 @@ Commit in small, modular units (one logical change per commit).
   `index.css`; `e2e/home.spec.ts` guards against horizontal scroll.
 - **Free to operate.** Cloudflare free tier only.
 
+## Identity broker (`worker/auth`, served at auth.lgtm.page)
+
+- **The registry is also the client list.** `client_id` is a registry slug
+  and a `redirect_uri` is allowed on the origin of that app's registry
+  `url` (any path) or on `http://localhost` / `127.0.0.1` / `[::1]`. There
+  is no second allowlist; `worker/auth/clients.ts` reads `shared/apps.ts`.
+- **One KV write per login.** `AUTH_KV` only burns redeemed codes
+  (`code:<jti>`, `burnCode`). The pending request (`lgtm_auth_txn`), the
+  authorization code and the broker session (`lgtm_auth_session`) are
+  AES-GCM sealed payloads (`crypto.ts`, HKDF-derived per-purpose keys), so
+  nothing else is stored. Never add per-request writes: the free tier
+  allows 1,000 a day.
+- **No secret store.** Confidential clients' secrets are
+  `deriveClientSecret(AUTH_MASTER_SECRET, slug)` in `shared/auth.ts`,
+  shared with `scripts/auth/client-secret.ts`; a test pins the derivation.
+  Rotating the master secret rotates every client secret and session.
+- **Mounting.** `authMount` (`worker/auth/index.ts`) serves the broker at
+  the root of `AUTH_HOST` and under `/auth/` only on localhost, 127.0.0.1,
+  `[::1]` and `*.workers.dev` (dev and PR previews). Never under `/auth/`
+  on lgtm.page, so there is exactly one production issuer. Every URL the
+  broker emits derives from `mount.issuer`.
+- **Broker code runs in Vitest** (`// @vitest-environment node`, WebCrypto
+  only). KV is behind `CodeStore` (`Pick<KVNamespace, "get" | "put">`),
+  provider calls take a `fetcher`, and `AUTH_PROVIDER_ORIGIN` rebases every
+  GitHub/Google URL (`providers.ts`: the paths do not collide). Test helpers
+  live in `worker/auth/test-env.ts`; `flow.test.ts` drives a whole login.
+- **Secrets are hand-typed** in `worker/auth/env.ts` (`AuthEnv extends
+Env`) because CI has no `.dev.vars` for `wrangler types` to read. Do not
+  redeclare the generated bindings there: `wrangler types` emits the vars
+  as string-literal types. Missing secrets make every auth route answer
+  `503 auth_not_configured`; the index must keep working regardless.
+- **Security rules with tests:** a bad `client_id` or `redirect_uri` gets a
+  400 page, never a redirect; PKCE S256 is mandatory for a code minted with
+  a challenge and a derived secret for one minted without; the code binds
+  `client_id`, `redirect_uri`, `code_challenge` and `nonce` and is checked
+  before it is burned; `state`/`nonce` are capped at 512 chars; the
+  provider callback requires the txn cookie's id to equal `state`;
+  `/logout` only redirects to a URI the named client could sign in with;
+  everything is `no-store`; HTML is never framed; CORS reflects only
+  registry origins and loopback, with `*` for discovery and JWKS only.
+- **E2e is hermetic** for the broker too: Playwright starts
+  `e2e/stub-provider.ts` on 5199 and the dev server with
+  `CLOUDFLARE_ENV=e2e`, which selects `env.e2e` in `wrangler.jsonc`
+  (`AUTH_PROVIDER_ORIGIN`, local KV, no routes) and `.dev.vars.e2e` (the
+  one committed dev-vars file; test-only values).
+
 ## Gotchas
 
 - `assets.run_worker_first` is `true` so the `www` redirect runs before
@@ -102,3 +148,10 @@ Commit in small, modular units (one logical change per commit).
   system theme; tests that need another answer redefine `window.matchMedia`.
 - lucide-react has no brand icons; the GitHub mark is
   `src/components/github-icon.tsx`.
+- KV `expirationTtl` must be at least 60 s (`CODE_BURN_TTL` is 120).
+- Sign-in cannot complete in a PR preview: its `/auth/callback/*` is not a
+  registered provider callback. Discovery, JWKS and `/token` still work.
+- `wrangler types` also reads `.env`, so `CLOUDFLARE_*` show up in the
+  generated `Env` locally; don't rely on them in Worker code.
+- Environments inherit `routes`; `env.e2e` sets `"routes": []` so a stray
+  `--env e2e` deploy can never take the custom domains.
