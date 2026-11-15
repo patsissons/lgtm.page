@@ -62,7 +62,9 @@ Locally the same flow runs against the path-mounted broker on
    { slug: "myapp", url: "https://myapp.example/", repo: "https://github.com/…" },
    ```
 
-   `title`, `description` and `image` can override poor tags.
+   `repo` is optional: leave it out for a private repository and the card
+   shows no source-code link. `title`, `description` and `image` can
+   override poor tags.
 
 3. Deploy. The new card shows up on the next page load.
 
