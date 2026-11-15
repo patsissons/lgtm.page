@@ -28,6 +28,10 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/chowda",
   },
   {
+    slug: "chromacy",
+    url: "https://chromacy.lgtm.page/",
+  },
+  {
     slug: "covac",
     url: "https://covac.fyi/",
     repo: "https://github.com/patsissons/covac",
