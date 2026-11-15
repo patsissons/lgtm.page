@@ -45,7 +45,6 @@ export const apps: readonly AppEntry[] = [
   {
     slug: "health-data-relay",
     url: "https://health-data-relay.lgtm.page/",
-    repo: "https://github.com/patsissons/health-relay",
   },
   {
     slug: "jeoprompty",
