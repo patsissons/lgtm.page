@@ -1,7 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apps, appsVersion } from "@shared/apps";
+import { apps, appsVersion, pageOf } from "@shared/apps";
 import type { AppCard, AppEntry } from "@shared/types";
-import { FRESH_ERROR_MS, FRESH_MS, handleApi, loadApps, toCard } from "./api";
+import {
+  FRESH_ERROR_MS,
+  FRESH_MS,
+  githubTags,
+  handleApi,
+  loadApps,
+  repoFile,
+  toCard,
+} from "./api";
 
 const page = (title: string) =>
   `<head><meta property="og:title" content="${title}">
@@ -91,6 +99,133 @@ describe("toCard", () => {
       repo: "https://github.com/x/a",
     });
   });
+
+  it("keeps the image override when the app could not be fetched", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetcher = vi.fn(async () => new Response("", { status: 503 }));
+    const [card] = await loadApps(
+      [{ slug: "a", url: "https://a.lgtm.page/", image: "/fallback.png" }],
+      fetcher as typeof fetch,
+    );
+    expect(card).toMatchObject({
+      status: "error",
+      image: "https://a.lgtm.page/fallback.png",
+    });
+    vi.restoreAllMocks();
+  });
+});
+
+describe("repo-only apps", () => {
+  const entry: AppEntry = {
+    slug: "macbat",
+    repo: "https://github.com/patsissons/macbat",
+  };
+  const github = `<head>
+    <meta property="og:title" content="GitHub - patsissons/macbat: Power monitor">
+    <meta property="og:description" content="Power monitor - patsissons/macbat">
+    <meta property="og:image" content="https://opengraph.githubassets.com/1/patsissons/macbat">
+    <meta property="og:image:alt" content="Power monitor - patsissons/macbat">
+  </head>`;
+
+  it("builds the card from the repo's GitHub page", async () => {
+    const fetcher = vi.fn(async () => new Response(github));
+    const [card] = await loadApps([entry], fetcher as typeof fetch);
+    expect(fetcher).toHaveBeenCalledWith(
+      "https://github.com/patsissons/macbat",
+      expect.anything(),
+    );
+    expect(card).toEqual({
+      slug: "macbat",
+      url: "https://github.com/patsissons/macbat",
+      host: "github.com",
+      title: "macbat",
+      description: "Power monitor",
+      image: "https://opengraph.githubassets.com/1/patsissons/macbat",
+      imageAlt: "Power monitor",
+      status: "ok",
+    });
+  });
+
+  it("keeps the repo name as the title when GitHub is unreachable", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetcher = vi.fn(async () => new Response("", { status: 429 }));
+    const [card] = await loadApps([entry], fetcher as typeof fetch);
+    expect(card).toEqual({
+      slug: "macbat",
+      url: "https://github.com/patsissons/macbat",
+      host: "github.com",
+      title: "macbat",
+      status: "error",
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("still lets registry overrides win", () => {
+    const card = toCard(
+      { ...entry, title: "MacBat", description: "Better", image: "/x.png" },
+      { title: "GitHub - patsissons/macbat: x", description: "x" },
+      "ok",
+    );
+    expect(card).toMatchObject({
+      title: "MacBat",
+      description: "Better",
+      image: "https://raw.githubusercontent.com/patsissons/macbat/HEAD/x.png",
+    });
+  });
+
+  it("shows the image override when GitHub is unreachable", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetcher = vi.fn(async () => {
+      throw new TypeError("network");
+    });
+    const [card] = await loadApps(
+      [{ ...entry, image: "assets/screenshot.svg" }],
+      fetcher as typeof fetch,
+    );
+    expect(card).toMatchObject({
+      status: "error",
+      title: "macbat",
+      image:
+        "https://raw.githubusercontent.com/patsissons/macbat/HEAD/assets/screenshot.svg",
+    });
+    vi.restoreAllMocks();
+  });
+
+  it.each([
+    [
+      "assets/shot.svg",
+      "https://raw.githubusercontent.com/o/r/HEAD/assets/shot.svg",
+    ],
+    [
+      "./assets/shot.svg",
+      "https://raw.githubusercontent.com/o/r/HEAD/assets/shot.svg",
+    ],
+    [
+      "/assets/shot.svg",
+      "https://raw.githubusercontent.com/o/r/HEAD/assets/shot.svg",
+    ],
+    ["https://cdn.example/shot.png", "https://cdn.example/shot.png"],
+    ["//cdn.example/shot.png", "https://cdn.example/shot.png"],
+  ])("reads image %s from the repo as %s", (path, url) => {
+    expect(repoFile(path, "https://github.com/o/r")).toBe(url);
+  });
+
+  it("has no image without an override", () => {
+    expect(repoFile(undefined, "https://github.com/o/r")).toBeUndefined();
+  });
+
+  it("only trims GitHub's own suffix", () => {
+    expect(
+      githubTags(
+        { description: "Uses - patsissons/other", imageAlt: "Alt" },
+        "https://github.com/patsissons/macbat",
+      ),
+    ).toEqual({
+      title: "macbat",
+      description: "Uses - patsissons/other",
+      imageAlt: "Alt",
+    });
+  });
 });
 
 describe("handleApi", () => {
@@ -111,8 +246,14 @@ describe("handleApi", () => {
     return ((await res.json()) as AppCard[]).map((c) => c.title);
   }
 
-  /** The titles expected when every registered app serves `title`. */
-  const every = (title: string) => apps.map(() => title);
+  /**
+   * The titles expected when every registered app serves `title`; a
+   * repo-only card is always titled with its repo's name.
+   */
+  const every = (title: string) =>
+    apps.map((app) =>
+      app.url === undefined ? app.repo.split("/").pop() : title,
+    );
 
   beforeEach(() => {
     cache = new FakeCache();
@@ -145,8 +286,8 @@ describe("handleApi", () => {
     expect(first.headers.get("cache-control")).toBe("public, max-age=300");
     expect(await titles(first)).toEqual(every("Live"));
     expect(fetchMock).toHaveBeenCalledTimes(apps.length);
-    for (const { url } of apps) {
-      expect(fetchMock).toHaveBeenCalledWith(url, expect.anything());
+    for (const app of apps) {
+      expect(fetchMock).toHaveBeenCalledWith(pageOf(app), expect.anything());
     }
 
     // Query strings share one cache entry.

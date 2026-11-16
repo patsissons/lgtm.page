@@ -4,7 +4,8 @@ import type { AppEntry } from "./types";
  * Every app in the index, alphabetical by slug. Apps can live on any domain.
  * Adding an app is one line: its card's title, description and image come
  * from the app's own Open Graph tags, fetched live by the Worker
- * (worker/api.ts).
+ * (worker/api.ts). A project with no website is listed by `repo` alone and
+ * its card is its GitHub page.
  */
 export const apps: readonly AppEntry[] = [
   {
@@ -56,6 +57,11 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/jeoprompty",
   },
   {
+    slug: "macbat",
+    repo: "https://github.com/patsissons/macbat",
+    image: "assets/screenshot.svg",
+  },
+  {
     slug: "prismy",
     url: "https://prismy.lgtm.page/",
     repo: "https://github.com/patsissons/prismy",
@@ -91,6 +97,11 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/wavelength",
   },
 ];
+
+/** The page a card links to and reads its tags from. */
+export function pageOf(entry: AppEntry): string {
+  return entry.url ?? entry.repo;
+}
 
 /** A short, stable fingerprint (32-bit FNV-1a, base 36) of `entries`. */
 export function registryVersion(entries: readonly AppEntry[]): string {
