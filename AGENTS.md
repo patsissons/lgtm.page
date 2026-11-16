@@ -45,12 +45,15 @@ Commit in small, modular units (one logical change per commit).
   entry per app, alphabetical by slug (the display order; `apps.test.ts`
   checks it). Apps can live on any domain. Card text and images come from each app's
   own Open Graph tags at request time; registry `title` / `description` /
-  `image` are overrides for apps with poor tags, not the normal path.
+  `image` are overrides for apps with poor tags, not the normal path. They
+  apply on fetch errors too, so an `image` override doubles as the image a
+  card shows when the app is unreachable.
   Adding an app is documented in the README; keep that section current.
 - **Repo-only entries.** An entry with `repo` and no `url` (a CLI with no
   website) is a card for its GitHub page: `pageOf` (`shared/apps.ts`) is
   the page fetched and linked, `githubTags` (`worker/api.ts`) titles it with
-  the repo name and trims GitHub's ` - owner/name` suffix, and the card has
+  the repo name and trims GitHub's ` - owner/name` suffix, `repoFile`
+  resolves a relative `image` to the repo's raw file on `HEAD`, and the card has
   no separate repo icon. It is never an auth client or a CORS origin, so
   github.com can never be a redirect target; code that reads `entry.url`
   must handle `undefined`.

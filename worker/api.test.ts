@@ -7,6 +7,7 @@ import {
   githubTags,
   handleApi,
   loadApps,
+  repoFile,
   toCard,
 } from "./api";
 
@@ -98,6 +99,20 @@ describe("toCard", () => {
       repo: "https://github.com/x/a",
     });
   });
+
+  it("keeps the image override when the app could not be fetched", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetcher = vi.fn(async () => new Response("", { status: 503 }));
+    const [card] = await loadApps(
+      [{ slug: "a", url: "https://a.lgtm.page/", image: "/fallback.png" }],
+      fetcher as typeof fetch,
+    );
+    expect(card).toMatchObject({
+      status: "error",
+      image: "https://a.lgtm.page/fallback.png",
+    });
+    vi.restoreAllMocks();
+  });
 });
 
 describe("repo-only apps", () => {
@@ -154,8 +169,49 @@ describe("repo-only apps", () => {
     expect(card).toMatchObject({
       title: "MacBat",
       description: "Better",
-      image: "https://github.com/x.png",
+      image: "https://raw.githubusercontent.com/patsissons/macbat/HEAD/x.png",
     });
+  });
+
+  it("shows the image override when GitHub is unreachable", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetcher = vi.fn(async () => {
+      throw new TypeError("network");
+    });
+    const [card] = await loadApps(
+      [{ ...entry, image: "assets/screenshot.svg" }],
+      fetcher as typeof fetch,
+    );
+    expect(card).toMatchObject({
+      status: "error",
+      title: "macbat",
+      image:
+        "https://raw.githubusercontent.com/patsissons/macbat/HEAD/assets/screenshot.svg",
+    });
+    vi.restoreAllMocks();
+  });
+
+  it.each([
+    [
+      "assets/shot.svg",
+      "https://raw.githubusercontent.com/o/r/HEAD/assets/shot.svg",
+    ],
+    [
+      "./assets/shot.svg",
+      "https://raw.githubusercontent.com/o/r/HEAD/assets/shot.svg",
+    ],
+    [
+      "/assets/shot.svg",
+      "https://raw.githubusercontent.com/o/r/HEAD/assets/shot.svg",
+    ],
+    ["https://cdn.example/shot.png", "https://cdn.example/shot.png"],
+    ["//cdn.example/shot.png", "https://cdn.example/shot.png"],
+  ])("reads image %s from the repo as %s", (path, url) => {
+    expect(repoFile(path, "https://github.com/o/r")).toBe(url);
+  });
+
+  it("has no image without an override", () => {
+    expect(repoFile(undefined, "https://github.com/o/r")).toBeUndefined();
   });
 
   it("only trims GitHub's own suffix", () => {

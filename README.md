@@ -64,7 +64,8 @@ Locally the same flow runs against the path-mounted broker on
 
    `repo` is optional: leave it out for a private repository and the card
    shows no source-code link. `title`, `description` and `image` can
-   override poor tags.
+   override poor tags. An `image` override is also what the card shows
+   when the app's page cannot be fetched.
 
    A project with no website (a CLI, a library) can be listed by its repo
    alone:
@@ -74,7 +75,9 @@ Locally the same flow runs against the path-mounted broker on
    ```
 
    Its card links to the repo and reads GitHub's own tags, titled with the
-   repo's name. A repo-only entry is not a sign-in client (below).
+   repo's name. Its `image` may be a path in the repo, such as the
+   screenshot from its README (`image: "assets/screenshot.svg"`), served
+   from the default branch on raw.githubusercontent.com. A repo-only entry is not a sign-in client (below).
 
 3. Deploy. The new card shows up on the next page load.
 

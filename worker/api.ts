@@ -139,11 +139,28 @@ export function toCard(
     status,
   };
   if (entry.description) card.description = entry.description;
-  const image = resolve(entry.image, page);
+  const image =
+    entry.url === undefined
+      ? repoFile(entry.image, entry.repo)
+      : resolve(entry.image, entry.url);
   if (image) card.image = image;
   // A repo-only card already links to its repo.
   if (entry.url !== undefined && entry.repo) card.repo = entry.repo;
   return card;
+}
+
+/**
+ * An absolute URL as-is, or a path in `repo` (with or without a leading
+ * "/" or "./") as its raw file on the default branch. raw.githubusercontent
+ * serves images with their real content type, unlike github.com/…/blob.
+ */
+export function repoFile(
+  path: string | undefined,
+  repo: string,
+): string | undefined {
+  if (!path) return undefined;
+  const files = `https://raw.githubusercontent.com${new URL(repo).pathname}/HEAD/`;
+  return resolve(path.replace(/^\.?\/(?!\/)/, ""), files);
 }
 
 /**

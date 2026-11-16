@@ -10,7 +10,11 @@ interface AppEntryBase {
   /** Overrides for an app whose own tags are missing or poor. */
   title?: string;
   description?: string;
-  /** Absolute, or relative to the card's page. */
+  /**
+   * The card image, used even when the page's tags could not be fetched.
+   * Absolute, or relative to the home page; for a repo-only entry, a path
+   * in the repo (on its default branch), e.g. an image from its README.
+   */
   image?: string;
 }
 
