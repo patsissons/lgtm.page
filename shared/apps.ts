@@ -57,6 +57,10 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/jeoprompty",
   },
   {
+    slug: "macbat",
+    repo: "https://github.com/patsissons/macbat",
+  },
+  {
     slug: "prismy",
     url: "https://prismy.lgtm.page/",
     repo: "https://github.com/patsissons/prismy",
