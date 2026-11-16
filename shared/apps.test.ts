@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apps, appsVersion, registryVersion } from "./apps";
+import { apps, appsVersion, pageOf, registryVersion } from "./apps";
 
 describe("apps", () => {
   const slugs = apps.map((app) => app.slug);
@@ -9,8 +9,9 @@ describe("apps", () => {
     expect(slugs).toEqual([...slugs].sort());
   });
 
-  it("links every app's home page over https", () => {
+  it("links every hosted app's home page over https", () => {
     for (const { url } of apps) {
+      if (url === undefined) continue;
       const parsed = new URL(url);
       expect(parsed.protocol).toBe("https:");
       expect(parsed.pathname).toBe("/");
@@ -23,6 +24,20 @@ describe("apps", () => {
       if (repo)
         expect(repo).toMatch(/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/);
     }
+  });
+
+  it("gives every app a page: its home page, else its repo", () => {
+    expect(
+      pageOf({
+        slug: "a",
+        url: "https://a.lgtm.page/",
+        repo: "https://github.com/x/a",
+      }),
+    ).toBe("https://a.lgtm.page/");
+    expect(pageOf({ slug: "b", repo: "https://github.com/x/b" })).toBe(
+      "https://github.com/x/b",
+    );
+    for (const app of apps) expect(pageOf(app)).toMatch(/^https:\/\//);
   });
 
   it("fingerprints the registry", () => {

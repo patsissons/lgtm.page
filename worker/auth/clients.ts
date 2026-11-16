@@ -4,9 +4,9 @@ import type { AppEntry } from "@shared/types";
 import { timingSafeEqual } from "./crypto";
 
 /**
- * The registry is the client list: `client_id` is an app's slug and its
- * redirects may land anywhere on the app's own origin. There is no second
- * allowlist to keep in sync.
+ * The registry is the client list: `client_id` is a hosted app's slug and
+ * its redirects may land anywhere on the app's own origin. Repo-only
+ * entries are not clients. There is no second allowlist to keep in sync.
  */
 export interface Client {
   id: string;
@@ -25,8 +25,11 @@ export function findClient(
 ): Client | null {
   if (!id) return null;
   if (id === INDEX_CLIENT.id) return INDEX_CLIENT;
+  // A repo-only entry has no origin of its own, so it is never a client.
   const entry = registry.find((app) => app.slug === id);
-  return entry ? { id: entry.slug, origin: new URL(entry.url).origin } : null;
+  return entry?.url
+    ? { id: entry.slug, origin: new URL(entry.url).origin }
+    : null;
 }
 
 /** `http://localhost:*`, `http://127.0.0.1:*` or `http://[::1]:*` (RFC 8252). */
@@ -66,7 +69,9 @@ export function isAllowedOrigin(
   }
   if (url.origin !== origin) return false;
   if (isLoopback(url) || origin === INDEX_CLIENT.origin) return true;
-  return registry.some((app) => new URL(app.url).origin === origin);
+  return registry.some(
+    (app) => app.url !== undefined && new URL(app.url).origin === origin,
+  );
 }
 
 export async function verifyClientSecret(

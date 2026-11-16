@@ -66,6 +66,16 @@ Locally the same flow runs against the path-mounted broker on
    shows no source-code link. `title`, `description` and `image` can
    override poor tags.
 
+   A project with no website (a CLI, a library) can be listed by its repo
+   alone:
+
+   ```ts
+   { slug: "mytool", repo: "https://github.com/…" },
+   ```
+
+   Its card links to the repo and reads GitHub's own tags, titled with the
+   repo's name. A repo-only entry is not a sign-in client (below).
+
 3. Deploy. The new card shows up on the next page load.
 
 Changes to an app's own tags show up within the hour without redeploying
@@ -76,8 +86,8 @@ in your nearest data center.
 
 `auth.lgtm.page` is a small OpenID Connect provider that signs people in
 with GitHub or Google and hands your app a signed identity. Registering an
-app in `shared/apps.ts` is all the setup there is: the registry is the
-client list.
+app in `shared/apps.ts` with a `url` is all the setup there is: the
+registry is the client list (repo-only entries are left out).
 
 - Discovery: <https://auth.lgtm.page/.well-known/openid-configuration>
   (authorize, token, userinfo, JWKS and end-session endpoints).

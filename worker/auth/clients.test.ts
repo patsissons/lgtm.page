@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { deriveClientSecret } from "@shared/auth";
+import type { AppEntry } from "@shared/types";
 import {
   findClient,
   INDEX_CLIENT,
@@ -9,9 +10,10 @@ import {
   verifyClientSecret,
 } from "./clients";
 
-const REGISTRY = [
+const REGISTRY: AppEntry[] = [
   { slug: "wavelength", url: "https://wavelength.lgtm.page/" },
   { slug: "tiki.place", url: "https://tiki.place/play?x=1" },
+  { slug: "macbat", repo: "https://github.com/patsissons/macbat" },
 ];
 
 describe("findClient", () => {
@@ -26,6 +28,11 @@ describe("findClient", () => {
     expect(findClient("nope", REGISTRY)).toBeNull();
     expect(findClient(null, REGISTRY)).toBeNull();
     expect(findClient("", REGISTRY)).toBeNull();
+  });
+
+  it("never makes a repo-only entry a client", () => {
+    expect(findClient("macbat", REGISTRY)).toBeNull();
+    expect(findClient("macbat")).toBeNull();
   });
 
   it("uses the real registry by default", () => {
@@ -90,6 +97,8 @@ describe("isAllowedOrigin", () => {
     expect(isAllowedOrigin("https://wavelength.lgtm.page/", REGISTRY)).toBe(
       false,
     );
+    expect(isAllowedOrigin("https://github.com", REGISTRY)).toBe(false);
+    expect(isAllowedOrigin("https://github.com")).toBe(false);
     expect(isAllowedOrigin("null", REGISTRY)).toBe(false);
     expect(isAllowedOrigin(null, REGISTRY)).toBe(false);
   });

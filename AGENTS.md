@@ -47,6 +47,13 @@ Commit in small, modular units (one logical change per commit).
   own Open Graph tags at request time; registry `title` / `description` /
   `image` are overrides for apps with poor tags, not the normal path.
   Adding an app is documented in the README; keep that section current.
+- **Repo-only entries.** An entry with `repo` and no `url` (a CLI with no
+  website) is a card for its GitHub page: `pageOf` (`shared/apps.ts`) is
+  the page fetched and linked, `githubTags` (`worker/api.ts`) titles it with
+  the repo name and trims GitHub's ` - owner/name` suffix, and the card has
+  no separate repo icon. It is never an auth client or a CORS origin, so
+  github.com can never be a redirect target; code that reads `entry.url`
+  must handle `undefined`.
 - **One failing app never breaks the index.** `loadApps` returns a card for
   every entry (`status: "error"` when the fetch or parse failed) and the UI
   flags it; never let a fetch error reject the whole list.
@@ -82,9 +89,9 @@ Commit in small, modular units (one logical change per commit).
 
 ## Identity broker (`worker/auth`, served at auth.lgtm.page)
 
-- **The registry is also the client list.** `client_id` is a registry slug
-  and a `redirect_uri` is allowed on the origin of that app's registry
-  `url` (any path) or on `http://localhost` / `127.0.0.1` / `[::1]`. There
+- **The registry is also the client list.** `client_id` is the slug of a
+  registry entry with a `url`, and a `redirect_uri` is allowed on the origin
+  of that `url` (any path) or on `http://localhost` / `127.0.0.1` / `[::1]`. There
   is no second allowlist; `worker/auth/clients.ts` reads `shared/apps.ts`.
 - **One KV write per login.** `AUTH_KV` only burns redeemed codes
   (`code:<jti>`, `burnCode`). The pending request (`lgtm_auth_txn`), the

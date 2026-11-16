@@ -1,4 +1,4 @@
-import { apps, appsVersion } from "@shared/apps";
+import { apps, appsVersion, pageOf } from "@shared/apps";
 import type { AppCard, AppEntry, AppMeta } from "@shared/types";
 import { handleAccount } from "./account";
 import type { AuthEnv } from "./auth/env";
@@ -103,8 +103,9 @@ async function loadApp(
   entry: AppEntry,
   fetcher: typeof fetch,
 ): Promise<AppCard> {
+  const page = pageOf(entry);
   try {
-    const res = await fetcher(entry.url, {
+    const res = await fetcher(page, {
       headers: {
         accept: "text/html",
         "user-agent": "lgtm.page-index (+https://lgtm.page)",
@@ -112,10 +113,10 @@ async function loadApp(
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const meta = parseMeta(await res.text(), res.url || entry.url);
+    const meta = parseMeta(await res.text(), res.url || page);
     return toCard(entry, meta, "ok");
   } catch (error) {
-    console.warn(`lgtm: could not load ${entry.url}`, error);
+    console.warn(`lgtm: could not load ${page}`, error);
     return toCard(entry, {}, "error");
   }
 }
@@ -126,18 +127,37 @@ export function toCard(
   meta: AppMeta,
   status: AppCard["status"],
 ): AppCard {
-  const host = new URL(entry.url).host;
+  const page = pageOf(entry);
+  const host = new URL(page).host;
+  const tags = entry.url === undefined ? githubTags(meta, entry.repo) : meta;
   const card: AppCard = {
-    ...meta,
+    ...tags,
     slug: entry.slug,
-    url: entry.url,
+    url: page,
     host,
-    title: entry.title ?? meta.title ?? host,
+    title: entry.title ?? tags.title ?? host,
     status,
   };
   if (entry.description) card.description = entry.description;
-  const image = resolve(entry.image, entry.url);
+  const image = resolve(entry.image, page);
   if (image) card.image = image;
-  if (entry.repo) card.repo = entry.repo;
+  // A repo-only card already links to its repo.
+  if (entry.url !== undefined && entry.repo) card.repo = entry.repo;
   return card;
+}
+
+/**
+ * GitHub titles a repo "GitHub - owner/name: about" and appends
+ * " - owner/name" to its description and image alt; a card wants just the
+ * name and the about text.
+ */
+export function githubTags(meta: AppMeta, repo: string): AppMeta {
+  const path = new URL(repo).pathname.slice(1);
+  const suffix = ` - ${path}`;
+  const trim = (text: string) =>
+    text.endsWith(suffix) ? text.slice(0, -suffix.length) : text;
+  const tags: AppMeta = { ...meta, title: path.split("/")[1] };
+  if (meta.description) tags.description = trim(meta.description);
+  if (meta.imageAlt) tags.imageAlt = trim(meta.imageAlt);
+  return tags;
 }

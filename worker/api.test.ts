@@ -1,7 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apps, appsVersion } from "@shared/apps";
+import { apps, appsVersion, pageOf } from "@shared/apps";
 import type { AppCard, AppEntry } from "@shared/types";
-import { FRESH_ERROR_MS, FRESH_MS, handleApi, loadApps, toCard } from "./api";
+import {
+  FRESH_ERROR_MS,
+  FRESH_MS,
+  githubTags,
+  handleApi,
+  loadApps,
+  toCard,
+} from "./api";
 
 const page = (title: string) =>
   `<head><meta property="og:title" content="${title}">
@@ -93,6 +100,78 @@ describe("toCard", () => {
   });
 });
 
+describe("repo-only apps", () => {
+  const entry: AppEntry = {
+    slug: "macbat",
+    repo: "https://github.com/patsissons/macbat",
+  };
+  const github = `<head>
+    <meta property="og:title" content="GitHub - patsissons/macbat: Power monitor">
+    <meta property="og:description" content="Power monitor - patsissons/macbat">
+    <meta property="og:image" content="https://opengraph.githubassets.com/1/patsissons/macbat">
+    <meta property="og:image:alt" content="Power monitor - patsissons/macbat">
+  </head>`;
+
+  it("builds the card from the repo's GitHub page", async () => {
+    const fetcher = vi.fn(async () => new Response(github));
+    const [card] = await loadApps([entry], fetcher as typeof fetch);
+    expect(fetcher).toHaveBeenCalledWith(
+      "https://github.com/patsissons/macbat",
+      expect.anything(),
+    );
+    expect(card).toEqual({
+      slug: "macbat",
+      url: "https://github.com/patsissons/macbat",
+      host: "github.com",
+      title: "macbat",
+      description: "Power monitor",
+      image: "https://opengraph.githubassets.com/1/patsissons/macbat",
+      imageAlt: "Power monitor",
+      status: "ok",
+    });
+  });
+
+  it("keeps the repo name as the title when GitHub is unreachable", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetcher = vi.fn(async () => new Response("", { status: 429 }));
+    const [card] = await loadApps([entry], fetcher as typeof fetch);
+    expect(card).toEqual({
+      slug: "macbat",
+      url: "https://github.com/patsissons/macbat",
+      host: "github.com",
+      title: "macbat",
+      status: "error",
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("still lets registry overrides win", () => {
+    const card = toCard(
+      { ...entry, title: "MacBat", description: "Better", image: "/x.png" },
+      { title: "GitHub - patsissons/macbat: x", description: "x" },
+      "ok",
+    );
+    expect(card).toMatchObject({
+      title: "MacBat",
+      description: "Better",
+      image: "https://github.com/x.png",
+    });
+  });
+
+  it("only trims GitHub's own suffix", () => {
+    expect(
+      githubTags(
+        { description: "Uses - patsissons/other", imageAlt: "Alt" },
+        "https://github.com/patsissons/macbat",
+      ),
+    ).toEqual({
+      title: "macbat",
+      description: "Uses - patsissons/other",
+      imageAlt: "Alt",
+    });
+  });
+});
+
 describe("handleApi", () => {
   let cache: FakeCache;
   let pending: Promise<unknown>[];
@@ -111,8 +190,14 @@ describe("handleApi", () => {
     return ((await res.json()) as AppCard[]).map((c) => c.title);
   }
 
-  /** The titles expected when every registered app serves `title`. */
-  const every = (title: string) => apps.map(() => title);
+  /**
+   * The titles expected when every registered app serves `title`; a
+   * repo-only card is always titled with its repo's name.
+   */
+  const every = (title: string) =>
+    apps.map((app) =>
+      app.url === undefined ? app.repo.split("/").pop() : title,
+    );
 
   beforeEach(() => {
     cache = new FakeCache();
@@ -145,8 +230,8 @@ describe("handleApi", () => {
     expect(first.headers.get("cache-control")).toBe("public, max-age=300");
     expect(await titles(first)).toEqual(every("Live"));
     expect(fetchMock).toHaveBeenCalledTimes(apps.length);
-    for (const { url } of apps) {
-      expect(fetchMock).toHaveBeenCalledWith(url, expect.anything());
+    for (const app of apps) {
+      expect(fetchMock).toHaveBeenCalledWith(pageOf(app), expect.anything());
     }
 
     // Query strings share one cache entry.
