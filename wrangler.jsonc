@@ -23,6 +23,7 @@
     { "pattern": "auth.lgtm.page", "custom_domain": true },
     // Proxied sites (worker/site.ts), one per registry entry with a `site`.
     { "pattern": "macbat.lgtm.page", "custom_domain": true },
+    { "pattern": "unsleep.lgtm.page", "custom_domain": true },
   ],
   "vars": {
     "AUTH_HOST": "auth.lgtm.page",

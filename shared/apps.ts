@@ -89,6 +89,11 @@ export const apps: readonly AppEntry[] = [
     repo: "https://github.com/patsissons/tiki.place",
   },
   {
+    slug: "unsleep",
+    site: "https://raw.githubusercontent.com/patsissons/unsleep/refs/heads/main/site",
+    repo: "https://github.com/patsissons/unsleep",
+  },
+  {
     slug: "voting",
     url: "https://voting.lgtm.page/",
     repo: "https://github.com/patsissons/voting",
