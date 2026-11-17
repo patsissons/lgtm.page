@@ -1,4 +1,4 @@
-import { apps, appsVersion, pageOf } from "@shared/apps";
+import { apps, appsVersion, pageOf, siteFile } from "@shared/apps";
 import type { AppCard, AppEntry, AppMeta } from "@shared/types";
 import { handleAccount } from "./account";
 import type { AuthEnv } from "./auth/env";
@@ -11,6 +11,8 @@ export function json(body: unknown, init: ResponseInit = {}): Response {
   });
 }
 
+/** Sent with every fetch the Worker makes on an app's behalf. */
+export const USER_AGENT = "lgtm.page-index (+https://lgtm.page)";
 /** How long a fetch of an app's HTML may take before its card errors. */
 export const FETCH_TIMEOUT_MS = 5_000;
 /** Cards are refetched in the background once they are this old. */
@@ -104,21 +106,30 @@ async function loadApp(
   fetcher: typeof fetch,
 ): Promise<AppCard> {
   const page = pageOf(entry);
+  const source = sourceOf(entry);
   try {
-    const res = await fetcher(page, {
-      headers: {
-        accept: "text/html",
-        "user-agent": "lgtm.page-index (+https://lgtm.page)",
-      },
+    const res = await fetcher(source, {
+      headers: { accept: "text/html", "user-agent": USER_AGENT },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const meta = parseMeta(await res.text(), res.url || page);
+    // Relative URLs in a proxied site's tags resolve against its subdomain.
+    const base = entry.site === undefined ? res.url || page : page;
+    const meta = parseMeta(await res.text(), base);
     return toCard(entry, meta, "ok");
   } catch (error) {
-    console.warn(`lgtm: could not load ${page}`, error);
+    console.warn(`lgtm: could not load ${source}`, error);
     return toCard(entry, {}, "error");
   }
+}
+
+/**
+ * The document an app's tags are read from: its page, or for a proxied
+ * site, its index.html at the source (the subdomain may not be served by
+ * this deployment, and a Worker should not fetch itself).
+ */
+export function sourceOf(entry: AppEntry): string {
+  return entry.site === undefined ? pageOf(entry) : siteFile(entry.site, "/")!;
 }
 
 /** Registry overrides win over the app's own tags. */
@@ -129,7 +140,8 @@ export function toCard(
 ): AppCard {
   const page = pageOf(entry);
   const host = new URL(page).host;
-  const tags = entry.url === undefined ? githubTags(meta, entry.repo) : meta;
+  const repoOnly = entry.url === undefined && entry.site === undefined;
+  const tags = repoOnly ? githubTags(meta, entry.repo) : meta;
   const card: AppCard = {
     ...tags,
     slug: entry.slug,
@@ -139,13 +151,12 @@ export function toCard(
     status,
   };
   if (entry.description) card.description = entry.description;
-  const image =
-    entry.url === undefined
-      ? repoFile(entry.image, entry.repo)
-      : resolve(entry.image, entry.url);
+  const image = repoOnly
+    ? repoFile(entry.image, entry.repo)
+    : resolve(entry.image, page);
   if (image) card.image = image;
   // A repo-only card already links to its repo.
-  if (entry.url !== undefined && entry.repo) card.repo = entry.repo;
+  if (!repoOnly && entry.repo) card.repo = entry.repo;
   return card;
 }
 
