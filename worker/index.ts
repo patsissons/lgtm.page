@@ -1,6 +1,7 @@
 import { handleApi } from "./api";
 import { authMount, handleAuth } from "./auth";
 import type { AuthEnv } from "./auth/env";
+import { handleSite, matchSite } from "./site";
 
 /** www.lgtm.page (or www. on any host) permanently redirects to the apex. */
 export function wwwRedirect(url: URL): Response | null {
@@ -17,6 +18,8 @@ export default {
     if (redirect) return redirect;
     const mount = authMount(url, env);
     if (mount) return handleAuth(request, env as AuthEnv, url, mount);
+    const site = matchSite(url);
+    if (site) return handleSite(request, url, site);
     if (url.pathname.startsWith("/api/")) {
       return handleApi(request, env as AuthEnv, ctx, url);
     }
