@@ -60,8 +60,8 @@ export const apps: readonly AppEntry[] = [
   },
   {
     slug: "macbat",
+    site: "https://raw.githubusercontent.com/patsissons/macbat/refs/heads/main/site",
     repo: "https://github.com/patsissons/macbat",
-    image: "assets/screenshot.svg",
   },
   {
     slug: "prismy",
