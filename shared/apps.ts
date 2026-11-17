@@ -54,6 +54,11 @@ export const apps: readonly AppEntry[] = [
     url: "https://health-data-relay.lgtm.page/",
   },
   {
+    slug: "irl.page",
+    url: "https://irl.page/",
+    repo: "https://github.com/patsissons/irl.page",
+  },
+  {
     slug: "jeoprompty",
     url: "https://jeoprompty.com/",
     repo: "https://github.com/patsissons/jeoprompty",
