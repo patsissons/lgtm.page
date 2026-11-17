@@ -21,6 +21,8 @@
     { "pattern": "www.lgtm.page", "custom_domain": true },
     // The identity broker (worker/auth), served at the root of this host.
     { "pattern": "auth.lgtm.page", "custom_domain": true },
+    // Proxied sites (worker/site.ts), one per registry entry with a `site`.
+    { "pattern": "macbat.lgtm.page", "custom_domain": true },
   ],
   "vars": {
     "AUTH_HOST": "auth.lgtm.page",

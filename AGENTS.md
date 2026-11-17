@@ -57,6 +57,21 @@ Commit in small, modular units (one logical change per commit).
   no separate repo icon. It is never an auth client or a CORS origin, so
   github.com can never be a redirect target; code that reads `entry.url`
   must handle `undefined`.
+- **Proxied sites.** An entry with `site` (and no `url`) is a static site
+  the Worker serves (`worker/site.ts`) from `site`'s files, at
+  `<slug>.lgtm.page` (and `<slug>.localhost` in dev) and under
+  `/<slug>/` on any host. `pageOf` is the subdomain; `sourceOf`
+  (`worker/api.ts`) reads its tags from `site`'s `index.html` and resolves
+  them against the subdomain. Each site's subdomain is a custom domain in
+  `wrangler.jsonc`, never a wildcard route (which would also catch every
+  other proxied subdomain); `site.test.ts` keeps routes and registry in
+  sync, and `apps.test.ts` keeps slugs DNS-safe and off the index's own
+  paths. Nothing from the visitor's request is forwarded and only the body
+  and ETag of the upstream response come back, with the type taken from
+  the extension (raw.githubusercontent says `text/plain`). Path mode runs
+  on the index's origin, so every path-mode response carries the
+  `PATH_SANDBOX` CSP (no `allow-same-origin`); keep it. Like repo-only
+  entries, sites are never auth clients or CORS origins.
 - **One failing app never breaks the index.** `loadApps` returns a card for
   every entry (`status: "error"` when the fetch or parse failed) and the UI
   flags it; never let a fetch error reject the whole list.
@@ -152,7 +167,7 @@ Env`) because CI has no `.dev.vars` for `wrangler types` to read. Do not
 
 - `assets.run_worker_first` is `true` so the `www` redirect runs before
   asset serving; the Worker falls through to `env.ASSETS` for everything
-  but `/api/*`.
+  but `/api/*` and proxied sites.
 - The Workers Cache API is a no-op on `workers.dev` and in PR previews, so
   those always fetch the apps live.
 - `wrangler preview` (the PR preview workflow) fails unless `wrangler.jsonc`

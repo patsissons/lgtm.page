@@ -79,6 +79,37 @@ Locally the same flow runs against the path-mounted broker on
    screenshot from its README (`image: "assets/screenshot.svg"`), served
    from the default branch on raw.githubusercontent.com. A repo-only entry is not a sign-in client (below).
 
+   A project that deserves a small landing page but not its own hosting
+   can be a proxied site: commit static files to a public repo (say a
+   `site/` folder with an `index.html`) and list the folder's raw URL:
+
+   ```ts
+   {
+     slug: "mytool",
+     site: "https://raw.githubusercontent.com/…/mytool/refs/heads/main/site",
+     repo: "https://github.com/…/mytool",
+   },
+   ```
+
+   The Worker fetches each file from `site` and serves it at
+   `https://mytool.lgtm.page/` (the card's link; its tags come from the
+   site's `index.html`) and at `https://lgtm.page/mytool/`, which also
+   works in `pnpm dev` and PR previews (as does
+   `http://mytool.localhost:5173/`). Give the subdomain to the Worker in
+   `wrangler.jsonc` (a test checks it):
+
+   ```jsonc
+   { "pattern": "mytool.lgtm.page", "custom_domain": true },
+   ```
+
+   The slug must be a DNS label that is not already a path on lgtm.page
+   (`api`, `assets`, `privacy`, …). Link between the site's files with
+   relative URLs only, so it works under `/mytool/` too. Under
+   `lgtm.page/mytool/` the pages are sandboxed (an opaque origin, so no
+   `localStorage` or cookies); on the subdomain they are not. Edits go live
+   within about five minutes, once the raw file and edge caches expire. A
+   site is not a sign-in client either.
+
 3. Deploy. The new card shows up on the next page load.
 
 Changes to an app's own tags show up within the hour without redeploying

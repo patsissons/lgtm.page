@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apps, appsVersion, pageOf } from "@shared/apps";
+import { apps, appsVersion } from "@shared/apps";
 import type { AppCard, AppEntry } from "@shared/types";
 import {
   FRESH_ERROR_MS,
@@ -8,6 +8,7 @@ import {
   handleApi,
   loadApps,
   repoFile,
+  sourceOf,
   toCard,
 } from "./api";
 
@@ -228,6 +229,53 @@ describe("repo-only apps", () => {
   });
 });
 
+describe("site apps", () => {
+  const entry: AppEntry = {
+    slug: "tiny",
+    site: "https://raw.githubusercontent.com/x/tiny/refs/heads/main/site",
+    repo: "https://github.com/x/tiny",
+  };
+
+  it("reads the tags from the site's index.html at its source", async () => {
+    const fetcher = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(page("Tiny"), {
+          headers: { "content-type": "text/plain" },
+        }),
+    );
+    const [card] = await loadApps([entry], fetcher);
+    expect(fetcher.mock.calls[0]![0]).toBe(
+      "https://raw.githubusercontent.com/x/tiny/refs/heads/main/site/index.html",
+    );
+    expect(sourceOf(entry)).toBe(fetcher.mock.calls[0]![0]);
+    // It links to, and resolves relative tags against, its subdomain.
+    expect(card).toEqual({
+      slug: "tiny",
+      url: "https://tiny.lgtm.page/",
+      host: "tiny.lgtm.page",
+      title: "Tiny",
+      image: "https://tiny.lgtm.page/og.png",
+      repo: "https://github.com/x/tiny",
+      status: "ok",
+    });
+  });
+
+  it("resolves an image override against its subdomain", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetcher = vi.fn(async () => new Response("", { status: 404 }));
+    const [card] = await loadApps(
+      [{ ...entry, image: "shot.png" }],
+      fetcher as typeof fetch,
+    );
+    expect(card).toMatchObject({
+      status: "error",
+      title: "tiny.lgtm.page",
+      image: "https://tiny.lgtm.page/shot.png",
+    });
+    vi.restoreAllMocks();
+  });
+});
+
 describe("handleApi", () => {
   let cache: FakeCache;
   let pending: Promise<unknown>[];
@@ -252,7 +300,9 @@ describe("handleApi", () => {
    */
   const every = (title: string) =>
     apps.map((app) =>
-      app.url === undefined ? app.repo.split("/").pop() : title,
+      app.url === undefined && app.site === undefined
+        ? app.repo.split("/").pop()
+        : title,
     );
 
   beforeEach(() => {
@@ -287,7 +337,7 @@ describe("handleApi", () => {
     expect(await titles(first)).toEqual(every("Live"));
     expect(fetchMock).toHaveBeenCalledTimes(apps.length);
     for (const app of apps) {
-      expect(fetchMock).toHaveBeenCalledWith(pageOf(app), expect.anything());
+      expect(fetchMock).toHaveBeenCalledWith(sourceOf(app), expect.anything());
     }
 
     // Query strings share one cache entry.
