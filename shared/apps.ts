@@ -1,11 +1,13 @@
-import type { AppEntry } from "./types";
+import type { AppEntry, SiteApp } from "./types";
 
 /**
  * Every app in the index, alphabetical by slug. Apps can live on any domain.
  * Adding an app is one line: its card's title, description and image come
  * from the app's own Open Graph tags, fetched live by the Worker
- * (worker/api.ts). A project with no website is listed by `repo` alone and
- * its card is its GitHub page.
+ * (worker/api.ts). A small static site is listed by `site` (the base URL
+ * its files are fetched from) and served by the Worker (worker/site.ts). A
+ * project with no website is listed by `repo` alone and its card is its
+ * GitHub page.
  */
 export const apps: readonly AppEntry[] = [
   {
@@ -98,9 +100,43 @@ export const apps: readonly AppEntry[] = [
   },
 ];
 
-/** The page a card links to and reads its tags from. */
+/** The domain whose subdomains serve proxied sites. */
+export const SITE_DOMAIN = "lgtm.page";
+
+/** Where a site entry is served: https://<slug>.lgtm.page */
+export function siteOrigin(slug: string): string {
+  return `https://${slug}.${SITE_DOMAIN}`;
+}
+
+/** The entries the Worker proxies, by slug. */
+export const sites: ReadonlyMap<string, SiteApp> = new Map(
+  apps.flatMap((entry) =>
+    entry.site === undefined ? [] : [[entry.slug, entry] as const],
+  ),
+);
+
+/**
+ * The upstream URL of the file at `path` (a request path, relative to the
+ * site's root) of the site at `site`: a directory means its index.html.
+ * Null for a path that would leave `site`.
+ */
+export function siteFile(site: string, path: string): string | null {
+  const base = site.endsWith("/") ? site : `${site}/`;
+  let file = path.replace(/^\/+/, "");
+  if (file === "" || file.endsWith("/")) file += "index.html";
+  try {
+    const href = new URL(file, base).href;
+    return href.startsWith(base) ? href : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The page a card links to (and, unless it is a site, reads its tags from). */
 export function pageOf(entry: AppEntry): string {
-  return entry.url ?? entry.repo;
+  if (entry.url !== undefined) return entry.url;
+  if (entry.site !== undefined) return `${siteOrigin(entry.slug)}/`;
+  return entry.repo;
 }
 
 /** A short, stable fingerprint (32-bit FNV-1a, base 36) of `entries`. */
