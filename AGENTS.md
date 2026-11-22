@@ -42,8 +42,14 @@ Commit in small, modular units (one logical change per commit).
 ## Product invariants
 
 - **The registry is the only list of apps.** `shared/apps.ts` holds one
-  entry per app, alphabetical by slug (the display order; `apps.test.ts`
-  checks it). Apps can live on any domain. Card text and images come from each app's
+  entry per app, alphabetical by slug (`apps.test.ts` checks it). Every
+  entry carries `created` and `updated`, ISO 8601 UTC timestamps
+  (`2026-10-16T20:33:15Z`, also checked): `created` is when it joined the
+  registry and `updated` starts equal to it, re-stamped only when asked to
+  after a significant update to the app. `/api/apps` returns cards in
+  registry order with both stamps; the page sorts them (`sortApps`,
+  `src/lib/sort-apps.ts`), by default most recently updated first, with
+  ties A to Z by title. Apps can live on any domain. Card text and images come from each app's
   own Open Graph tags at request time; registry `title` / `description` /
   `image` are overrides for apps with poor tags, not the normal path. They
   apply on fetch errors too, so an `image` override doubles as the image a

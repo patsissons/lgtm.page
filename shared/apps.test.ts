@@ -23,6 +23,17 @@ describe("apps", () => {
     expect(slugs).toEqual([...slugs].sort());
   });
 
+  it("stamps every app in UTC, updated no earlier than created", () => {
+    const isStamp = (value: string) =>
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value) &&
+      new Date(value).toISOString() === value.replace("Z", ".000Z");
+    for (const { slug, created, updated } of apps) {
+      expect(isStamp(created), `${slug} created`).toBe(true);
+      expect(isStamp(updated), `${slug} updated`).toBe(true);
+      expect(updated >= created, `${slug} updated before created`).toBe(true);
+    }
+  });
+
   it("links every hosted app's home page over https", () => {
     for (const { url } of apps) {
       if (url === undefined) continue;
@@ -67,16 +78,25 @@ describe("apps", () => {
     expect(
       pageOf({
         slug: "a",
+        created: "2026-01-01T00:00:00Z",
+        updated: "2026-01-01T00:00:00Z",
         url: "https://a.lgtm.page/",
         repo: "https://github.com/x/a",
       }),
     ).toBe("https://a.lgtm.page/");
-    expect(pageOf({ slug: "b", repo: "https://github.com/x/b" })).toBe(
-      "https://github.com/x/b",
-    );
+    expect(
+      pageOf({
+        slug: "b",
+        created: "2026-01-01T00:00:00Z",
+        updated: "2026-01-01T00:00:00Z",
+        repo: "https://github.com/x/b",
+      }),
+    ).toBe("https://github.com/x/b");
     expect(
       pageOf({
         slug: "c",
+        created: "2026-01-01T00:00:00Z",
+        updated: "2026-01-01T00:00:00Z",
         site: "https://example.com/c",
         repo: "https://github.com/x/c",
       }),

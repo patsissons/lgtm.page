@@ -1,13 +1,17 @@
+import { useState } from "react";
 import { CircleCheck } from "lucide-react";
 import { AccountMenu } from "@/components/account-menu";
 import { AppCard, AppCardSkeleton } from "@/components/app-card";
+import { SortControl } from "@/components/sort-control";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { DEFAULT_SORT, sortApps } from "@/lib/sort-apps";
 import { useApps } from "@/lib/use-apps";
 
 const GRID = "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3";
 
 export default function App() {
   const apps = useApps();
+  const [sort, setSort] = useState(DEFAULT_SORT);
 
   return (
     <div className="safe-x mx-auto flex min-h-dvh max-w-6xl flex-col py-12 sm:py-16">
@@ -32,6 +36,15 @@ export default function App() {
       </header>
 
       <main className="flex-1">
+        {apps.status !== "error" && (
+          <div className="mb-4 flex justify-end">
+            <SortControl
+              sort={sort}
+              onChange={setSort}
+              disabled={apps.status === "loading"}
+            />
+          </div>
+        )}
         {apps.status === "loading" && (
           <div className={GRID} aria-busy="true" aria-label="Loading apps">
             {Array.from({ length: 3 }, (_, i) => (
@@ -53,7 +66,7 @@ export default function App() {
         )}
         {apps.status === "ready" && (
           <ul className={GRID} aria-label="Apps">
-            {apps.apps.map((app) => (
+            {sortApps(apps.apps, sort).map((app) => (
               <li key={app.slug} className="flex">
                 <AppCard app={app} />
               </li>

@@ -59,8 +59,21 @@ Locally the same flow runs against the path-mounted broker on
 2. Add one entry to `shared/apps.ts`, keeping the list alphabetical by slug:
 
    ```ts
-   { slug: "myapp", url: "https://myapp.example/", repo: "https://github.com/…" },
+   {
+     slug: "myapp",
+     created: "2026-11-21T18:30:00Z",
+     updated: "2026-11-21T18:30:00Z",
+     url: "https://myapp.example/",
+     repo: "https://github.com/…",
+   },
    ```
+
+   `created` is when the app joins the index and `updated` starts out as
+   the same value, both ISO 8601 timestamps in UTC (`date -u
++%Y-%m-%dT%H:%M:%SZ`). After a significant update to an app, re-stamp
+   its `updated` with the current time; the index lists the most recently
+   updated apps first. The remaining examples leave the two stamps out for
+   brevity, but every entry needs them (a test checks).
 
    `repo` is optional: leave it out for a private repository and the card
    shows no source-code link. `title`, `description` and `image` can

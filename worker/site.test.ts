@@ -11,7 +11,12 @@ import {
 } from "./site";
 
 const SOURCE = "https://raw.githubusercontent.com/x/tiny/refs/heads/main/site";
-const tiny: SiteApp = { slug: "tiny", site: SOURCE };
+const tiny: SiteApp = {
+  slug: "tiny",
+  created: "2026-01-01T00:00:00Z",
+  updated: "2026-01-01T00:00:00Z",
+  site: SOURCE,
+};
 const table = new Map([["tiny", tiny]]);
 
 describe("matchSite", () => {

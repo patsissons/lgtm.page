@@ -28,7 +28,12 @@ class FakeCache {
 }
 
 describe("loadApps", () => {
-  const entry: AppEntry = { slug: "a", url: "https://a.lgtm.page/" };
+  const entry: AppEntry = {
+    slug: "a",
+    created: "2026-01-01T00:00:00Z",
+    updated: "2026-01-01T00:00:00Z",
+    url: "https://a.lgtm.page/",
+  };
 
   it("builds a card from the app's tags", async () => {
     const fetcher = vi.fn(
@@ -38,6 +43,8 @@ describe("loadApps", () => {
     const [card] = await loadApps([entry], fetcher);
     expect(card).toEqual({
       slug: "a",
+      created: "2026-01-01T00:00:00Z",
+      updated: "2026-01-01T00:00:00Z",
       url: "https://a.lgtm.page/",
       host: "a.lgtm.page",
       title: "A",
@@ -63,10 +70,30 @@ describe("loadApps", () => {
     });
     const cards = await loadApps(
       [
-        { slug: "down", url: "https://down.lgtm.page/" },
-        { slug: "up", url: "https://up.lgtm.page/" },
-        { slug: "slow", url: "https://slow.lgtm.page/" },
-        { slug: "gone", url: "https://gone.lgtm.page/" },
+        {
+          slug: "down",
+          created: "2026-01-01T00:00:00Z",
+          updated: "2026-01-01T00:00:00Z",
+          url: "https://down.lgtm.page/",
+        },
+        {
+          slug: "up",
+          created: "2026-01-01T00:00:00Z",
+          updated: "2026-01-01T00:00:00Z",
+          url: "https://up.lgtm.page/",
+        },
+        {
+          slug: "slow",
+          created: "2026-01-01T00:00:00Z",
+          updated: "2026-01-01T00:00:00Z",
+          url: "https://slow.lgtm.page/",
+        },
+        {
+          slug: "gone",
+          created: "2026-01-01T00:00:00Z",
+          updated: "2026-01-01T00:00:00Z",
+          url: "https://gone.lgtm.page/",
+        },
       ],
       fetcher as typeof fetch,
     );
@@ -80,10 +107,27 @@ describe("loadApps", () => {
 });
 
 describe("toCard", () => {
+  it("carries the registry's dates, even for a failed fetch", () => {
+    const entry: AppEntry = {
+      slug: "a",
+      created: "2026-01-01T00:00:00Z",
+      updated: "2026-02-03T00:00:00Z",
+      url: "https://a.lgtm.page/",
+    };
+    for (const status of ["ok", "error"] as const) {
+      expect(toCard(entry, {}, status)).toMatchObject({
+        created: "2026-01-01T00:00:00Z",
+        updated: "2026-02-03T00:00:00Z",
+      });
+    }
+  });
+
   it("lets registry overrides win over the app's tags", () => {
     const card = toCard(
       {
         slug: "a",
+        created: "2026-01-01T00:00:00Z",
+        updated: "2026-01-01T00:00:00Z",
         url: "https://a.lgtm.page/app/",
         repo: "https://github.com/x/a",
         title: "Override",
@@ -105,7 +149,15 @@ describe("toCard", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const fetcher = vi.fn(async () => new Response("", { status: 503 }));
     const [card] = await loadApps(
-      [{ slug: "a", url: "https://a.lgtm.page/", image: "/fallback.png" }],
+      [
+        {
+          slug: "a",
+          created: "2026-01-01T00:00:00Z",
+          updated: "2026-01-01T00:00:00Z",
+          url: "https://a.lgtm.page/",
+          image: "/fallback.png",
+        },
+      ],
       fetcher as typeof fetch,
     );
     expect(card).toMatchObject({
@@ -119,6 +171,8 @@ describe("toCard", () => {
 describe("repo-only apps", () => {
   const entry: AppEntry = {
     slug: "macbat",
+    created: "2026-01-01T00:00:00Z",
+    updated: "2026-01-01T00:00:00Z",
     repo: "https://github.com/patsissons/macbat",
   };
   const github = `<head>
@@ -137,6 +191,8 @@ describe("repo-only apps", () => {
     );
     expect(card).toEqual({
       slug: "macbat",
+      created: "2026-01-01T00:00:00Z",
+      updated: "2026-01-01T00:00:00Z",
       url: "https://github.com/patsissons/macbat",
       host: "github.com",
       title: "macbat",
@@ -153,6 +209,8 @@ describe("repo-only apps", () => {
     const [card] = await loadApps([entry], fetcher as typeof fetch);
     expect(card).toEqual({
       slug: "macbat",
+      created: "2026-01-01T00:00:00Z",
+      updated: "2026-01-01T00:00:00Z",
       url: "https://github.com/patsissons/macbat",
       host: "github.com",
       title: "macbat",
@@ -232,6 +290,8 @@ describe("repo-only apps", () => {
 describe("site apps", () => {
   const entry: AppEntry = {
     slug: "tiny",
+    created: "2026-01-01T00:00:00Z",
+    updated: "2026-01-01T00:00:00Z",
     site: "https://raw.githubusercontent.com/x/tiny/refs/heads/main/site",
     repo: "https://github.com/x/tiny",
   };
@@ -251,6 +311,8 @@ describe("site apps", () => {
     // It links to, and resolves relative tags against, its subdomain.
     expect(card).toEqual({
       slug: "tiny",
+      created: "2026-01-01T00:00:00Z",
+      updated: "2026-01-01T00:00:00Z",
       url: "https://tiny.lgtm.page/",
       host: "tiny.lgtm.page",
       title: "Tiny",

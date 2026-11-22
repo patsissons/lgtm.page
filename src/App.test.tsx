@@ -5,8 +5,14 @@ import { appsVersion } from "@shared/apps";
 import type { AppCard } from "@shared/types";
 import App from "./App";
 
-const card = (slug: string): AppCard => ({
+const card = (
+  slug: string,
+  created = "2026-01-01T00:00:00Z",
+  updated = created,
+): AppCard => ({
   slug,
+  created,
+  updated,
   url: `https://${slug}.lgtm.page/`,
   host: `${slug}.lgtm.page`,
   title: slug[0]!.toUpperCase() + slug.slice(1),
@@ -47,8 +53,11 @@ describe("App", () => {
     expect(screen.getAllByTestId("app-card-skeleton")).toHaveLength(3);
   });
 
-  it("shows a card per app, in order", async () => {
-    const fetchMock = mockApps([card("wavelength"), card("other")]);
+  it("shows a card per app, most recently updated first", async () => {
+    const fetchMock = mockApps([
+      card("other", "2026-02-01T00:00:00Z"),
+      card("wavelength", "2026-01-01T00:00:00Z", "2026-03-01T00:00:00Z"),
+    ]);
     render(<App />);
     const list = await screen.findByRole("list", { name: "Apps" });
     expect(list.querySelectorAll("li")).toHaveLength(2);
@@ -59,6 +68,50 @@ describe("App", () => {
       `/api/apps?v=${appsVersion}`,
       expect.anything(),
     );
+  });
+
+  it("re-sorts the cards by the picked key and order", async () => {
+    mockApps([
+      card("bravo", "2026-01-01T00:00:00Z", "2026-03-01T00:00:00Z"),
+      card("alpha", "2026-02-01T00:00:00Z"),
+      card("charlie", "2026-01-15T00:00:00Z"),
+    ]);
+    render(<App />);
+    await screen.findByRole("list", { name: "Apps" });
+    const titles = () =>
+      screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+    const select = screen.getByRole("combobox", { name: "Sort by" });
+    expect(select).toHaveValue("updated");
+    expect(titles()).toEqual(["Bravo", "Alpha", "Charlie"]);
+
+    await userEvent.click(screen.getByRole("button", { name: "Newest first" }));
+    expect(titles()).toEqual(["Charlie", "Alpha", "Bravo"]);
+    expect(
+      screen.getByRole("button", { name: "Oldest first" }),
+    ).toHaveAttribute("title", "Switch to newest first");
+
+    // A new key starts in its natural order: newest first.
+    await userEvent.selectOptions(select, "Created");
+    expect(titles()).toEqual(["Alpha", "Charlie", "Bravo"]);
+    await userEvent.click(screen.getByRole("button", { name: "Newest first" }));
+    expect(titles()).toEqual(["Bravo", "Charlie", "Alpha"]);
+
+    // Names start A to Z.
+    await userEvent.selectOptions(select, "Name");
+    expect(titles()).toEqual(["Alpha", "Bravo", "Charlie"]);
+    await userEvent.click(screen.getByRole("button", { name: "A to Z" }));
+    expect(titles()).toEqual(["Charlie", "Bravo", "Alpha"]);
+    expect(screen.getByRole("button", { name: "Z to A" })).toBeInTheDocument();
+  });
+
+  it("disables sorting until the apps load", () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => {})),
+    );
+    render(<App />);
+    expect(screen.getByRole("combobox", { name: "Sort by" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Newest first" })).toBeDisabled();
   });
 
   it("offers a retry when the list fails to load", async () => {

@@ -11,9 +11,24 @@ import {
 } from "./clients";
 
 const REGISTRY: AppEntry[] = [
-  { slug: "wavelength", url: "https://wavelength.lgtm.page/" },
-  { slug: "tiki.place", url: "https://tiki.place/play?x=1" },
-  { slug: "macbat", repo: "https://github.com/patsissons/macbat" },
+  {
+    slug: "wavelength",
+    created: "2026-01-01T00:00:00Z",
+    updated: "2026-01-01T00:00:00Z",
+    url: "https://wavelength.lgtm.page/",
+  },
+  {
+    slug: "tiki.place",
+    created: "2026-01-01T00:00:00Z",
+    updated: "2026-01-01T00:00:00Z",
+    url: "https://tiki.place/play?x=1",
+  },
+  {
+    slug: "macbat",
+    created: "2026-01-01T00:00:00Z",
+    updated: "2026-01-01T00:00:00Z",
+    repo: "https://github.com/patsissons/macbat",
+  },
 ];
 
 describe("findClient", () => {
