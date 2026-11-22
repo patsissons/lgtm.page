@@ -72,6 +72,13 @@ export const apps: readonly AppEntry[] = [
     url: "https://health-data-relay.lgtm.page/",
   },
   {
+    slug: "hiddengrovestrails",
+    created: "2026-11-22T18:12:19Z",
+    updated: "2026-11-22T18:12:19Z",
+    url: "https://hiddengrovestrails.lgtm.page/",
+    repo: "https://github.com/patsissons/hiddengrovestrails",
+  },
+  {
     slug: "irl.page",
     created: "2026-11-17T19:19:09Z",
     updated: "2026-11-17T19:19:09Z",
