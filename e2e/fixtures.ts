@@ -10,6 +10,8 @@ const PIXEL = Buffer.from(
 export const CARDS: AppCard[] = [
   {
     slug: "wavelength",
+    created: "2026-01-01T00:00:00Z",
+    updated: "2026-03-01T00:00:00Z",
     url: "https://wavelength.lgtm.page/",
     host: "wavelength.lgtm.page",
     title: "Wavelength",
@@ -21,6 +23,8 @@ export const CARDS: AppCard[] = [
   },
   {
     slug: "broken",
+    created: "2026-02-01T00:00:00Z",
+    updated: "2026-02-01T00:00:00Z",
     url: "https://broken.lgtm.page/",
     host: "broken.lgtm.page",
     title: "broken.lgtm.page",

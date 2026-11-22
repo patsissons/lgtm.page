@@ -5,6 +5,8 @@ import { AppCard } from "./app-card";
 
 const base: AppCardData = {
   slug: "wavelength",
+  created: "2026-01-01T00:00:00Z",
+  updated: "2026-01-01T00:00:00Z",
   url: "https://wavelength.lgtm.page/",
   host: "wavelength.lgtm.page",
   title: "Wavelength",
@@ -51,6 +53,8 @@ describe("AppCard", () => {
       <AppCard
         app={{
           slug: "down",
+          created: "2026-01-01T00:00:00Z",
+          updated: "2026-01-01T00:00:00Z",
           url: "https://down.lgtm.page/",
           host: "down.lgtm.page",
           title: "down.lgtm.page",

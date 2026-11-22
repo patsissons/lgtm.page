@@ -8,6 +8,16 @@ export type AppEntry = HostedApp | SiteApp | RepoOnlyApp;
 interface AppEntryBase {
   /** Stable id; also the React key, and the auth `client_id` of a hosted app. */
   slug: string;
+  /**
+   * When the app joined the registry, as an ISO 8601 UTC timestamp
+   * (`2026-10-16T20:33:15Z`).
+   */
+  created: string;
+  /**
+   * When the app last changed significantly, in the same format: `created`
+   * until it is re-stamped. The index sorts by it by default.
+   */
+  updated: string;
   /** Overrides for an app whose own tags are missing or poor. */
   title?: string;
   description?: string;
@@ -71,6 +81,9 @@ export interface AppCard extends AppMeta {
   host: string;
   title: string;
   repo?: string;
+  /** The registry's `created` and `updated` timestamps (ISO 8601, UTC). */
+  created: string;
+  updated: string;
   /** "error" when the app's HTML could not be fetched or read. */
   status: "ok" | "error";
 }

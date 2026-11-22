@@ -7,6 +7,8 @@ import App from "./App";
 
 const card = (slug: string): AppCard => ({
   slug,
+  created: "2026-01-01T00:00:00Z",
+  updated: "2026-01-01T00:00:00Z",
   url: `https://${slug}.lgtm.page/`,
   host: `${slug}.lgtm.page`,
   title: slug[0]!.toUpperCase() + slug.slice(1),

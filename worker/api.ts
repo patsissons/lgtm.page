@@ -148,6 +148,8 @@ export function toCard(
     url: page,
     host,
     title: entry.title ?? tags.title ?? host,
+    created: entry.created,
+    updated: entry.updated,
     status,
   };
   if (entry.description) card.description = entry.description;
