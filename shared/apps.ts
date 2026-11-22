@@ -20,7 +20,7 @@ export const apps: readonly AppEntry[] = [
   {
     slug: "bazillion",
     created: "2026-10-29T00:28:24Z",
-    updated: "2026-10-29T00:28:24Z",
+    updated: "2026-11-21T05:08:54Z",
     url: "https://bazillion.lgtm.page/",
     repo: "https://github.com/patsissons/bazillion",
   },
