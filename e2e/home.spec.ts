@@ -27,6 +27,30 @@ test("the home page lists every app as a card", async ({ page }) => {
   await expect(broken.getByText("unreachable")).toBeVisible();
 });
 
+test("the cards can be sorted by update, creation or name", async ({
+  page,
+}) => {
+  await stubApps(page);
+  await page.goto("/");
+  const titles = page.getByTestId("app-card").getByRole("heading");
+  // Last updated, newest first, by default.
+  await expect(titles).toHaveText(["Wavelength", "broken.lgtm.page"]);
+
+  await page.getByRole("button", { name: "Newest first" }).click();
+  await expect(titles).toHaveText(["broken.lgtm.page", "Wavelength"]);
+
+  const sortBy = page.getByRole("combobox", { name: "Sort by" });
+  await sortBy.selectOption({ label: "Created" });
+  await expect(titles).toHaveText(["broken.lgtm.page", "Wavelength"]);
+  await page.getByRole("button", { name: "Newest first" }).click();
+  await expect(titles).toHaveText(["Wavelength", "broken.lgtm.page"]);
+
+  await sortBy.selectOption({ label: "Name" });
+  await expect(titles).toHaveText(["broken.lgtm.page", "Wavelength"]);
+  await page.getByRole("button", { name: "A to Z" }).click();
+  await expect(titles).toHaveText(["Wavelength", "broken.lgtm.page"]);
+});
+
 test("clicking anywhere on a card opens the app", async ({ page }) => {
   await stubApps(page);
   await page.goto("/");
